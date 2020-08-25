@@ -13,9 +13,9 @@
   },
   "repository": {
     "type": "git",
-    "url": "git@code.inke.cn:opd/edith/edith.reportdebug.javascript.git"
+    "url": "https://github.com/inkefe/edith-script.git"
   },
-  "author": "yinran@inke.cn",
+  "author": "1005469156@qq.com",
   "license": "ISC",
   "keywords": [
     "debug",
