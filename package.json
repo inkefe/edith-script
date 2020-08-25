@@ -1,0 +1,55 @@
+{
+  "name": "@inke-design/edith-script",
+  "version": "0.1.10",
+  "description": "监控平台上报",
+  "main": "./index.js",
+  "scripts": {
+    "build": "NODE_ENV=production rollup -c",
+    "build:es": "NODE_ENV=production FORMAT=es rollup -c",
+    "build:cjs": "NODE_ENV=production FORMAT=cjs rollup -c",
+    "dev": "concurrently \" FORMAT=iife rollup -c -w\" \"http-server ./test\"",
+    "pretest": "npm run build",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git@code.inke.cn:opd/edith/edith.reportdebug.javascript.git"
+  },
+  "author": "yinran@inke.cn",
+  "license": "ISC",
+  "keywords": [
+    "debug",
+    "error",
+    "report",
+    "Error monitoring",
+    "错误上报",
+    "错误监听"
+  ],
+  "dependencies": {
+    "@inke-design/edith-record": "^0.0.4"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.6.4",
+    "@babel/plugin-external-helpers": "^7.10.4",
+    "@babel/plugin-proposal-class-properties": "^7.10.4",
+    "@babel/plugin-syntax-dynamic-import": "^7.8.3",
+    "@babel/plugin-transform-runtime": "^7.6.2",
+    "@babel/preset-env": "^7.6.3",
+    "@rollup/plugin-commonjs": "^13.0.0",
+    "@rollup/plugin-json": "^4.1.0",
+    "@rollup/plugin-replace": "^2.3.3",
+    "babel-eslint": "^10.1.0",
+    "concurrently": "^5.2.0",
+    "core-js": "^2.6.10",
+    "eslint": "^7.3.1",
+    "fsevents": "^2.1.3",
+    "http-server": "^0.12.3",
+    "rollup": "^2.18.0",
+    "rollup-plugin-babel": "^4.3.3",
+    "rollup-plugin-eslint": "^7.0.0",
+    "rollup-plugin-node-resolve": "^5.1.0",
+    "rollup-plugin-terser": "^6.1.0",
+    "rollup-plugin-uglify": "^6.0.4",
+    "web-vitals": "^0.2.4"
+  }
+}
