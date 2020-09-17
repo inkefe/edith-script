@@ -1,3 +1,4 @@
+
 export const serviceRoot = IS_DEV ? 'https://event-edith.op-center.cn' : 'https://event-edith.op-center.cn'
 
 // 存储用户行为的本地数据key
@@ -31,19 +32,19 @@ const cdnHost = IS_DEV ? location.origin : '//webcdn.inke.cn/edith.cn'
 // 内置插件的cdn地址
 export const innerPluginsCdn = {
   breadcrumbs: {
-    link: `${cdnHost}/plugins/BreadcrumbsPlugin.js`,
+    link: `${cdnHost}/plugins_${VERSION}/BreadcrumbsPlugin.js`,
     name: 'BreadcrumbsPlugin'
   },
   network: {
-    link: `${cdnHost}/plugins/NetworkCheckPlugin.js`,
+    link: `${cdnHost}/plugins_${VERSION}/NetworkCheckPlugin.js`,
     name: 'NetworkCheckPlugin'
   } ,
   redo: {
-    link: `${cdnHost}/plugins/RecordPlugin.js`,
+    link: `${cdnHost}/plugins_${VERSION}/RecordPlugin.js`,
     name: 'RecordPlugin'
   }
 }
 export const remixProps = {
   ajaxWhiteList, 
-  linkWhiteList: Object.values(innerPluginsCdn).map(item => item.link)
+  resourceWhiteList: Object.keys(innerPluginsCdn).map(item => innerPluginsCdn[item].link)
 }

@@ -85,7 +85,7 @@ export const eventPresent = e => {
 export const measureDelay = (fn, count) => {
   count = count || 1
   let n = 0, timeid
-
+  const src = 'https://hm.baidu.com/hm.gif?'
   const ld = () => {
       const t = getCurrentTime(), img = new Image;
       img.onload = () => {
@@ -94,13 +94,13 @@ export const measureDelay = (fn, count) => {
           fn(tcp) // 存储延迟回调
           if(n < count) timeid = setTimeout(ld, 1000);
       }
-      img.src = '//hm.baidu.com/hm.gif?' + Math.random();
+      img.src = src + Math.random();
       img.onerror = tryCatchFunc(eventPresent)
   };
   const img_start = new Image();
   img_start.onerror = tryCatchFunc(eventPresent)
   img_start.onload = ld
-  img_start.src = '//hm.baidu.com/hm.gif?' + Math.random();
+  img_start.src = src + Math.random();
 }
 
 
@@ -188,6 +188,10 @@ export const isIE8 = (() => {
 // 执行环境监测以及性能
 export const getPerform = () => { 
   // const getEntriesByType = 'getEntriesByType'
+  if(!performance) {
+    // console.warn('edith 内部报错: 当前环境不支持性能监控', )
+    return false
+  }
   return {
     timing: performance.timing,
     // chromeLoadingTiming: chrome && chrome.loadTimes(),
@@ -209,7 +213,7 @@ export const getOuterHTML = errorTarget => {
 export const getCurrentTime = () => (new Date()).getTime()
 
 // 判断是否是成功的请求状态码,不包含跨域，超时等请求
-export const isSuccess = status => status >= 200 && status < 300
+export const isSuccess = status => status < 400
 
 // 转换成字符串，除了函数
 export const transToString = p => p && typeof p === 'object' ? JSON.stringify(p) : (p + '')
@@ -218,31 +222,51 @@ export const getAarege = arr => {
   const total = arr.reduce((total, item) => total + item, 0)
   return arr.length === 0 ? -1 : total / arr.length
 }
-// 异步加载插件的scripts标签，封装成promise
+// 异步加载scripts标签
+export const loadScript = (url, cb, reject = () => {}) => {
+  const script = document.createElement('script')
+  script.src = url
+  script.onload = cb
+  script.onerror = reject
+  document.getElementsByTagName('head')[0].appendChild(script); 
+  // document.head.appendChild(script)
+} 
+// 异步加载插件，封装成promise
 export const loadCdnScript = (url, name) => new Promise((resolve, reject) => {
-  edithAddEventListener('load', ()=> {
-    const script = document.createElement('script')
-    script.src = url
-    script.onload = () => resolve({ default: window.Edith[name] })
-    script.onerror = reject
-    document.body.appendChild(script)
-  })
+  loadScript(url, () => resolve({ default: window.Edith[name] }), reject)
 })
-const removeHttpAndQuery = url => url.replace(/^https?/, '').split('?')[0]
+const removeHttpAndQuery = url => url.replace(/^[^/]*:?\/\//, '').split('?')[0]
 // 判断是不是在白名单
 export const isWhite = (list, url) => {
-  return list.find(i => removeHttpAndQuery(i) === removeHttpAndQuery(url))
+  return list.find(i => {
+    if(i instanceof RegExp) return i.test(url)
+    if (typeof i !== 'string') return
+    return removeHttpAndQuery(i) === removeHttpAndQuery(url)
+  })
 }
 // 避免map方法进入reject
 export const getPromiseResult = promises => {
   const handlePromise = Promise.all(
-    promises.map(fn => fn.catch ? fn.catch(err => 0) : fn).filter(Boolean)
+    promises.map(fn => fn.catch ? fn.catch(err => 0) : fn)
   )
   return handlePromise
 }
 // 页面打开的时间
-export const startTiming = () => (performance.timing && performance.timing.navigationStart) || getCurrentTime()
+export const startTiming = (performance.timing && performance.timing.navigationStart) || getCurrentTime()
+
 // 获取当前相对于页面打开时的时间戳
-export const getTimeStamp = () => getCurrentTime() - startTiming()
+export const getTimeStamp = () => getCurrentTime() - startTiming
 
 export const isFunction = fn => typeof fn === 'function'
+
+// 得到Headers对象里的数据
+export const getHeaders = h => {
+  const header = {}
+  if(h instanceof Headers) {
+    for(var p of headers) {
+      header[p[0]] = p[1]
+    }
+    return header
+  }
+  return h
+}

@@ -38,7 +38,7 @@ class NetworkCheckPlugin {
       }
       tasks.length > 0 && rIC(myNonEssentialWork);
     }
-    rIC(myNonEssentialWork, { timeout: 2000 });
+    rIC(myNonEssentialWork, { timeout: 7000 });
   }
 
   apply(compiler) {

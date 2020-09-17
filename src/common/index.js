@@ -1,7 +1,7 @@
-
-import { getPerform } from '../utils'
+const ua = navigator.userAgent
+const referrer = document.referrer
 // 自定义事件触发的公共方法
-export const eventTrigger = function(event) {
+export const eventTrigger = function (event) {
   window.dispatchEvent(new CustomEvent(event, { detail: this }));
 }
 // 组合 参数
@@ -15,12 +15,12 @@ export const getErrorInfo = err => {
     target: err._target,
     timeStamp: err.timeStamp,
     title: document.title, // 报错页面的标题
-    referrer: document.referrer, // 从哪个页面跳转过来
+    referrer, // 从哪个页面跳转过来
     url: location.href,
-    userAgent: navigator.userAgent,
+    userAgent: ua,
     columnNumber: err.colno,
     lineNumber: err.lineno,
-    performance: getPerform(),
+    // performance: getPerform(),
     // locale: navigator.browserLanguage || navigator.language,
     // severity: err.severity,
 
@@ -31,3 +31,5 @@ export const getErrorInfo = err => {
     // time: +new Date(), // 错误发生的时间戳
   }
 }
+
+

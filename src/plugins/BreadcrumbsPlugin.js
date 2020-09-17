@@ -88,7 +88,7 @@ const addUrlRecord = method => event => {
  */
 const addHttpRecord = (xhr, type = 'XMLHttpRequest') => {
   const { method, status, statusText, responseURL, originUrl, body = null,
-    requestHeader, startTime, endTime, _eid, timeStamp } = xhr
+    startTime, endTime, _eid, timeStamp } = xhr
   const elapsedTime = endTime - startTime // 请求耗时
   if(ajaxWhiteList.indexOf(originUrl && originUrl.split('?')[0]) >= 0) return //白名单接口不记录
   const record = {
@@ -105,14 +105,13 @@ const addHttpRecord = (xhr, type = 'XMLHttpRequest') => {
       method, // 请求方法
       status, // 状态码
       body, // post请求的body
-      requestHeader,
-      responseHeader: xhr.getAllResponseHeaders() || {}, // 这个方法不能解构出来赋值
+      // requestHeader,
+      // responseHeader: xhr.getAllResponseHeaders() || {}, // 这个方法不能解构出来赋值
       statusText, // 状态
       responseURL, // 接口响应地址
       originUrl, // 请求的原始参数地址
     }
   }
-  if(!timeStamp) delete record.timeStamp
   breadcrumbs.add(record)
 }
 
@@ -123,19 +122,17 @@ const recordAjax = () => {
     xhr._eid = getRandomID()
     xhr.timeStamp = e.timeStamp
     addHttpRecord(xhr)
-  });
+  })
   edithAddEventListener('ajaxProgress', e => {
     const xhr = e.detail
     // console.log(xhr)
     xhr.endTime = getCurrentTime() // 不断更新状态
-    xhr.timeStamp = 0
     addHttpRecord(xhr)
   });
   // 当XHR发生 abort / timeout / error 时事件触，loadend是最后触发的
   edithAddEventListener('ajaxLoadEnd', e => {
     const xhr = e.detail
     xhr.endTime = getCurrentTime()
-    xhr.timeStamp = 0
     addHttpRecord(xhr)
   });
 }
@@ -146,7 +143,7 @@ const recordFetch = () => {
     const xhr = {
       ...options,
       timeStamp: e.timeStamp,
-      requestHeader: options.headers
+      // requestHeader: options.headers
     }
     // console.log(xhr)
     addHttpRecord(xhr, 'fetchRequest')
@@ -156,7 +153,7 @@ const recordFetch = () => {
     const xhr = {
       ...options,
       responseURL: url,
-      requestHeader: options.headers,
+      // requestHeader: options.headers,
       endTime: getCurrentTime(),
       timeStamp: 0,
       ...e.detail,
@@ -165,13 +162,15 @@ const recordFetch = () => {
     addHttpRecord(xhr, 'fetchRequest')
   });
 }
-const addWebSocketRecord = event => {
-  const { target: ws, timeStamp } = event
+
+const addWebSocketRecord = method => event => {
+  const { ws, timeStamp } = event
   const record = {
     eid: ws._eid,
     type: 'webSocket',
     time: getCurrentTime(),
     timeStamp,
+    method: method || event.detail.method,
     elapsedTime: ws.elapsedTime, // 建立连接耗时
     detail: {
       url: ws.url,
@@ -184,36 +183,42 @@ const addWebSocketRecord = event => {
 // 记录WebSocket，建立连接和断开，算两次不同的行为记录
 const recordWebSocket = () => {
   edithAddEventListener('webSocketStart', e => {
+    
     const { target: ws } = e.detail
     ws.startTime = getCurrentTime()
     ws.elapsedTime = 0
     ws._eid = getRandomID()
-    e.detail.timeStamp = e.timeStamp
-    addWebSocketRecord('open')(e.detail)
+    // e.detail.timeStamp = e.timeStamp
+    const timeStamp = e.timeStamp
+    addWebSocketRecord('open')({ws, timeStamp})
   })
   edithAddEventListener('webSocketOpen', e => {
     const { target: ws } = e.detail
     ws.openTime = getCurrentTime()
     ws.elapsedTime = ws.openTime - ws.startTime
-    e.detail.timeStamp = e.timeStamp
-    addWebSocketRecord('open')(e.detail)
+    // e.detail.timeStamp = e.timeStamp
+    const timeStamp = e.timeStamp
+    addWebSocketRecord('open')({ws, timeStamp})
   })
 
   edithAddEventListener('webSocketClose', e => {
+    
     const { target: ws } = e.detail
     ws._eid = getRandomID()
     ws.endTime = getCurrentTime()
-    e.detail.timeStamp = e.timeStamp
-    ws.elapsedTime = ws.endTime - (ws.openTime || ws.endTime)
-    addWebSocketRecord('close')(e.detail)
+    // e.detail.timeStamp = e.timeStamp
+    const timeStamp = e.timeStamp
+    ws.elapsedTime = ws.endTime - (ws.openTime || ws.startTime)
+    addWebSocketRecord('close')({ws, timeStamp})
   })
+
 }
 
 const behaviorRecord = () => {
   edithAddEventListener('click', addActionRecord('click'), true)
   recordAjax()
   recordFetch()
-  // recordWebSocket() // 监听webSocket
+  recordWebSocket() // 监听webSocket
   if(isIE8) {
     let url = location.href
     setInterval(function() {
