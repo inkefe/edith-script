@@ -20,6 +20,7 @@ export const getErrorInfo = err => {
     userAgent: ua,
     columnNumber: err.colno,
     lineNumber: err.lineno,
+    cookie: document.cookie
     // performance: getPerform(),
     // locale: navigator.browserLanguage || navigator.language,
     // severity: err.severity,

@@ -4,7 +4,9 @@ import { loadCdnScript, getPromiseResult, isFunction, edithAddEventListener } fr
 
 const remix = ['resourceWhiteList', 'ajaxWhiteList']
 class _Edith {
-  state = {}
+  state = {
+    plugins: {}
+  }
   life = ''
 
   $life (status) {
@@ -92,14 +94,10 @@ class _Edith {
         if (typeof plugin === 'string') {
           if (FORMAT === 'iife') { // 如果打包成cdn链接
             const inner = innerPluginsCdn[plugin]
-            if (inner) {
-              promiseList.push(loadCdnScript(inner.link, inner.name))
-            }
+            inner && promiseList.push(loadCdnScript(inner.link, inner.name))
           } else if (FORMAT === 'es') { // 如果打包成npm模块
-            const inner = innerPlugins[plugin]()
-            if (inner) {
-              promiseList.push(inner)
-            }
+            const inner = innerPlugins[plugin]
+            inner && promiseList.push(inner())
           }
         } else promiseList.push(plugin)
       })
@@ -116,10 +114,14 @@ class _Edith {
       })
     })
   }
-
+  // 非内置插件的字段数据都在plugins里
   compilerCallback (pluginName, subInfo) {
-    this.setState({
-      [pluginName]: subInfo
+    const state = { [pluginName]: subInfo }
+    this.setState(innerPluginsCdn[pluginName] ? state : {
+      plugins: {
+        ...this.state.plugins,
+        ...state
+      }
     }, true)
   }
 
@@ -164,6 +166,7 @@ class _Edith {
         ajax: parmas.extraInfo || {},
         target: parmas.target || {},
       }
+      // console.log(parmas)
       if(!(this.filters && this.filters(filtersParmas)) || parmas.type === 'customError') reportDebug(parmas) // filters方法返回真值，则代表拦截
       this.state = this.initSate //上报完成去掉
       this.$life(EDITH_STATUS.LISTENING)

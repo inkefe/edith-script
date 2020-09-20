@@ -2,6 +2,8 @@
 
 上报前端错误到Edith后台
 
+[更新日志](./CHANGELOG.md)
+
 ---
 
 ## 安装
@@ -9,7 +11,7 @@
 ```bash
 npm install @inke-design/edith-script -save
 ```
-或者CDN引用
+或者CDN引用，注意可以增加版本号来查看是否有更新版本（- 增量部署的策略限制 -）
 
 ```javascript
 <script src="https://webcdn.inke.cn/edith.cn/edith.0.1.11.min.js"></script>

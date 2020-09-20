@@ -1,6 +1,6 @@
 {
   "name": "@inke-design/edith-script",
-  "version": "0.1.11",
+  "version": "0.2.0",
   "description": "监控平台上报",
   "main": "./index.js",
   "scripts": {
