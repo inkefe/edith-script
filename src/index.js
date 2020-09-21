@@ -8,6 +8,7 @@ class EdithClass extends _Edith {
   silentPromise = false // 是否需要不监控Promise
   silentWebsocket = false // 是否需要不监控 WebSocket
   silentResource = false // 是否需要不监控资源加载异常
+  silentHttp = false // 是否需要不监控网络请求异常
   // setHttpHeader = false // 是否需要上报http的header
   setHttpBody = false // 是否需要上报post的body
 
@@ -43,9 +44,9 @@ class EdithClass extends _Edith {
     // 支持性不太好,IE不支持,低版本浏览器也不支持
     if (!this.silentPromise) edithAddEventListener('unhandledrejection', this.handlePromise.bind(this))
     // 网络请求的err
-    edithAddEventListener('ajaxError', this.handleError.bind(this))
-    edithAddEventListener('ajaxTimeout', this.handleError.bind(this))
-    edithAddEventListener('fetchError', this.handleError.bind(this))
+    if (!this.silentHttp) edithAddEventListener('ajaxError', this.handleError.bind(this))
+    if (!this.silentHttp) edithAddEventListener('ajaxTimeout', this.handleError.bind(this))
+    if (!this.silentHttp) edithAddEventListener('fetchError', this.handleError.bind(this))
     if(!this.silentWebsocket) edithAddEventListener('webSocketError', this.handleError.bind(this))
   }
   

@@ -46,6 +46,7 @@ class _Edith {
   _waitPromise = nextState => {
     if(window.Promise) return
     edithAddEventListener('promisePolyfill', () => this.init(nextState))
+    return true
   }
 
   setState (nextState, byPlugins) {

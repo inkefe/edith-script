@@ -15,10 +15,10 @@ class NetworkCheckPlugin {
   checkNetSpeed() {
     const speed = testNetworkSpeed()
     if(speed) return this.speeds.push(speed)
-    measureBW(speed => this.speeds.push(speed), 3)
+    measureBW(speed => this.speeds.push(speed), 1)
   }
   checkDelay () {
-    measureDelay(tcp => this.delays.push(tcp), 5)
+    measureDelay(tcp => this.delays.push(tcp), 3)
   }
   startCheck() {
     const rIC = window.requestIdleCallback

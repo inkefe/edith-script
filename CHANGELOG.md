@@ -1,3 +1,11 @@
+# 2020-09-21 v0.2.2
+
+- 修复对Promise的polyfill的判断
+
+# 2020-09-16 v0.2.1
+
+- 增加silentHttp是否监听网络错误的参数
+
 # 2020-09-16 v0.2.0
 
 - 自定义插件数据，字段统一处理
@@ -7,7 +15,7 @@
 
 - 修复http请求header和body的获取
 - 增加webSokect监听错误和堆栈记录
-- 增加错误过滤，以及控制Promise监听，资源加载监听、webSokect、是否上报http的body的参数
+- 增加错误过滤，以及控制Promise监听，资源加载监听、webSocket、是否上报http的body的参数
 - 修复Promise不支持的解决方法
 - 修复开发环境下不能上报自定义错误的bug
 
