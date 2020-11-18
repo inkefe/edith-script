@@ -32,19 +32,19 @@ const cdnHost = IS_DEV ? location.origin : '//webcdn.inke.cn/edith.cn'
 // 内置插件的cdn地址
 export const innerPluginsCdn = {
   breadcrumbs: {
-    link: `${cdnHost}/plugins_${VERSION}/BreadcrumbsPlugin.js`,
+    link: `${cdnHost}/static/plugins_${VERSION}/BreadcrumbsPlugin.js`,
     name: 'BreadcrumbsPlugin'
   },
   network: {
-    link: `${cdnHost}/plugins_${VERSION}/NetworkCheckPlugin.js`,
+    link: `${cdnHost}/static/plugins_${VERSION}/NetworkCheckPlugin.js`,
     name: 'NetworkCheckPlugin'
   } ,
   redo: {
-    link: `${cdnHost}/plugins_${VERSION}/RecordPlugin.js`,
+    link: `${cdnHost}/static/plugins_${VERSION}/RecordPlugin.js`,
     name: 'RecordPlugin'
   }
 }
 export const remixProps = {
   ajaxWhiteList, 
-  resourceWhiteList: Object.keys(innerPluginsCdn).map(item => innerPluginsCdn[item].link)
+  resourceWhiteList: [ ...Object.keys(innerPluginsCdn).map(item => innerPluginsCdn[item].link), '//hm.baidu.com/hm.gif']
 }

@@ -19,7 +19,7 @@ class RecordPlugin {
         const lastEvents = that.eventsMatrix[that.eventsMatrix.length - 1];
         lastEvents.push(event);
       },
-      checkoutEveryNth: 200, // 每 200 个 event 重新制作快照
+      checkoutEveryNth: 150, // 每 200 个 event 重新制作快照
       checkoutEveryNms: 120 * 1000 // 每2分钟重新制作快照
     });
 

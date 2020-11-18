@@ -95,7 +95,7 @@ const addHttpRecord = (xhr, type = 'XMLHttpRequest') => {
     eid: _eid,
     type,
     time: getCurrentTime(),
-    timeStamp, 
+    timeStamp,
     page: {
       url: location.href,
       title: document.title
@@ -155,7 +155,7 @@ const recordFetch = () => {
       responseURL: url,
       // requestHeader: options.headers,
       endTime: getCurrentTime(),
-      timeStamp: 0,
+      timeStamp: e.timeStamp,
       ...e.detail,
     }
     // console.log('fetchEnd=>', xhr.status, e.detail)

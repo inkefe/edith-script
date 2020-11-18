@@ -218,7 +218,7 @@ export const isSuccess = status => status < 400
 // 转换成字符串，除了函数
 export const transToString = p => p && typeof p === 'object' ? JSON.stringify(p) : (p + '')
 
-export const getAarege = arr => { 
+export const getAverage = arr => { 
   const total = arr.reduce((total, item) => total + item, 0)
   return arr.length === 0 ? -1 : total / arr.length
 }
@@ -233,6 +233,7 @@ export const loadScript = (url, cb, reject = () => {}) => {
 } 
 // 异步加载插件，封装成promise
 export const loadCdnScript = (url, name) => new Promise((resolve, reject) => {
+  console.log(name)
   loadScript(url, () => resolve({ default: window.Edith[name] }), reject)
 })
 const removeHttpAndQuery = url => url.replace(/^[^/]*:?\/\//, '').split('?')[0]

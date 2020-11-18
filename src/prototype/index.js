@@ -4,10 +4,12 @@ import { loadCdnScript, getPromiseResult, isFunction, edithAddEventListener } fr
 
 const remix = ['resourceWhiteList', 'ajaxWhiteList']
 class _Edith {
+  life = ''
+
   state = {
     plugins: {}
   }
-  life = ''
+  initSate = this.state
 
   $life (status) {
     this.life = status
@@ -38,9 +40,9 @@ class _Edith {
         // star
         this._collecting(); // 加载插件立即初始化一次
         this.initSate = { ...this.state }
-        isFunction(this.pluginInstalled) && this.pluginInstalled()
-        this.$life(EDITH_STATUS.LISTENING)
       })
+      isFunction(this.pluginInstalled) && this.pluginInstalled()
+      this.$life(EDITH_STATUS.LISTENING)
     }).catch(() => this._sleep())
   }
   _waitPromise = nextState => {

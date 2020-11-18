@@ -3,14 +3,15 @@ import registBaseEvent from './common/registBaseEvent'
 import { getErrorInfo } from  './common'
 import { PROMISE_TIMEOUT, EDITH_STATUS } from './config'
 import { tryCatchFunc, edithAddEventListener, getTagName, getOuterHTML, getXPath, transToString, isWhite, getTimeStamp} from './utils'
-import { reportDebug } from './api'
+
 class EdithClass extends _Edith {
+  
   silentPromise = false // 是否需要不监控Promise
   silentWebsocket = false // 是否需要不监控 WebSocket
   silentResource = false // 是否需要不监控资源加载异常
   silentHttp = false // 是否需要不监控网络请求异常
-  // setHttpHeader = false // 是否需要上报http的header
   setHttpBody = false // 是否需要上报post的body
+  version = VERSION // 版本号
 
 
   willMount(options) {
@@ -42,12 +43,12 @@ class EdithClass extends _Edith {
     edithAddEventListener('error', this.handleError.bind(this), true)
     // 全局promise no catch error监听，捕获未处理的promise异常
     // 支持性不太好,IE不支持,低版本浏览器也不支持
-    if (!this.silentPromise) edithAddEventListener('unhandledrejection', this.handlePromise.bind(this))
+    this.silentPromise || edithAddEventListener('unhandledrejection', this.handlePromise.bind(this))
     // 网络请求的err
-    if (!this.silentHttp) edithAddEventListener('ajaxError', this.handleError.bind(this))
-    if (!this.silentHttp) edithAddEventListener('ajaxTimeout', this.handleError.bind(this))
-    if (!this.silentHttp) edithAddEventListener('fetchError', this.handleError.bind(this))
-    if(!this.silentWebsocket) edithAddEventListener('webSocketError', this.handleError.bind(this))
+    this.silentHttp || edithAddEventListener('ajaxError', this.handleError.bind(this))
+    this.silentHttp || edithAddEventListener('ajaxTimeout', this.handleError.bind(this))
+    this.silentHttp || edithAddEventListener('fetchError', this.handleError.bind(this))
+    this.silentWebsocket || edithAddEventListener('webSocketError', this.handleError.bind(this))
   }
   
   //  捕获到错误时的回调函数
@@ -83,12 +84,13 @@ class EdithClass extends _Edith {
       })
       this.$handleCollect()
     }), PROMISE_TIMEOUT)
-    edithAddEventListener('rejectionhandled', tryCatchFunc((event, promise)=> {
+    console.log('handlePromise, handlePromise, handlePromise')
+    window.onrejectionhandled = tryCatchFunc((event, promise)=> {
       if(pro === promise) {
         if(promiseTimer) clearTimeout(promiseTimer)
         promiseTimer = null
       }
-    }))
+    })
   }
   debug(name, message) {
     this.setState({

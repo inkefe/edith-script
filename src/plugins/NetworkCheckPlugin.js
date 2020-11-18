@@ -1,4 +1,4 @@
-import { getAarege, measureBW, measureDelay, testNetworkSpeed, getNetworkType } from '../utils'
+import { getAverage, measureBW, measureDelay, testNetworkSpeed, getNetworkType } from '../utils'
 
 class NetworkCheckPlugin {
   constructor() {
@@ -49,8 +49,8 @@ class NetworkCheckPlugin {
       }
       const { netWorkType } = that.state
       callback({
-        speed: getAarege(that.speeds),
-        delay: getAarege(that.delays),
+        speed: getAverage(that.speeds),
+        delay: getAverage(that.delays),
         netWorkType
       })
     })
