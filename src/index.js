@@ -2,23 +2,23 @@ import _Edith from './prototype'
 import registBaseEvent from './common/registBaseEvent'
 import { getErrorInfo } from  './common'
 import { PROMISE_TIMEOUT, EDITH_STATUS } from './config'
-import { tryCatchFunc, edithAddEventListener, getTagName, getOuterHTML, getXPath, transToString, isWhite, getTimeStamp} from './utils'
+import { tryCatchFunc, edithAddEventListener, getTagName, getOuterHTML, getXPath, transToString, isWhite, getTimeStamp, isFunction} from './utils'
 
 class EdithClass extends _Edith {
   
+  silentDev = false // 是否开发环境不上报
   silentPromise = false // 是否需要不监控Promise
   silentWebsocket = false // 是否需要不监控 WebSocket
   silentResource = false // 是否需要不监控资源加载异常
   silentHttp = false // 是否需要不监控网络请求异常
   setHttpBody = false // 是否需要上报post的body
-  version = VERSION // 版本号
-
+  version = EDITH_VERSION // 版本号
 
   willMount(options) {
     for(var prop in options){
-      if(options[prop] !== void 0) this[prop] = options[prop]
+      if(options[prop] !== void 0 && !isFunction(this[prop]) && prop !== 'version')
+        this[prop] = options[prop]
     }
-    // console.log('willMount')
   }
   didMount() {
     // console.log('didMount')
@@ -30,9 +30,9 @@ class EdithClass extends _Edith {
 
   checkSelf() { // 自定义自检方法
     this.handleError({ type: 'error', target: window })
-    this.handleError({ type: 'error', target: {src: '', tagName: 'a', outerHTML: '', parentNode: document} })
-    this.handleError({ type: 'ajaxError', detail: { originUrl: ''} })
-    this.handleError({ type: 'fetchError', detail: { options:{url: ''}} })
+    this.silentResource || this.handleError({ type: 'error', target: {src: '', tagName: 'a', outerHTML: '', parentNode: document} })
+    this.silentHttp || this.handleError({ type: 'ajaxError', detail: { originUrl: ''} })
+    this.silentHttp || this.handleError({ type: 'fetchError', detail: { options:{url: ''}} })
     // console.log('checkSelf')
   }
 
@@ -84,7 +84,6 @@ class EdithClass extends _Edith {
       })
       this.$handleCollect()
     }), PROMISE_TIMEOUT)
-    console.log('handlePromise, handlePromise, handlePromise')
     window.onrejectionhandled = tryCatchFunc((event, promise)=> {
       if(pro === promise) {
         if(promiseTimer) clearTimeout(promiseTimer)
@@ -110,6 +109,7 @@ class EdithClass extends _Edith {
       errorEvent._type = 'webSocketError'
       const errorTarget = errorEvent.detail.target || errorEvent.detail.currentTarget;
       const { url, startTime, endTime , openTime} = errorTarget
+      if(isWhite(this.ajaxWhiteList, url)) return // 白名单不做上报
       errorEvent.extraInfo = {
         url,
         elapsedTime : endTime - (openTime || startTime)
@@ -126,6 +126,7 @@ class EdithClass extends _Edith {
         sourceUrl = errorTarget.href
       } else sourceUrl = errorTarget.src
       if(isWhite(this.resourceWhiteList, sourceUrl)) return // 白名单不做上报
+      sourceUrl === location.href && (sourceUrl = '')
       errorEvent.message = sourceUrl
       errorEvent.name = errorEvent._type = 'resourceError'
       errorEvent._target = {
@@ -151,7 +152,7 @@ class EdithClass extends _Edith {
         method,
         url: originUrl
       }
-      if(this.httpBody) errorEvent.extraInfo.body = xhr.body
+      if(this.setHttpBody) errorEvent.extraInfo.body = xhr.body
       // if(this.httpHeader) {
       //   errorEvent.extraInfo.responseHeader = xhr.getAllResponseHeaders() || {}
       //   errorEvent.extraInfo.requestHeader = requestHeader
@@ -168,7 +169,7 @@ class EdithClass extends _Edith {
         elapsedTime: options.endTime - options.startTime,
         ...options
       }
-      if(!this.httpBody) delete errorEvent.extraInfo.body
+      if(!this.setHttpBody) delete errorEvent.extraInfo.body
       
       return errorEvent
     },
@@ -183,6 +184,5 @@ class EdithClass extends _Edith {
 }
 
 const Edith = new EdithClass()
-
 window.Edith = Edith
 export default Edith

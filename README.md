@@ -87,11 +87,21 @@ Edith.init({
   }
   ```
 
-3. 过滤url为空字符串的图片加载错误
+4. 过滤url为空字符串的图片加载错误
 
   ```javascript
   Edith.filters = err => {
     const { target: { tagName = '' }, message } = err
     return tagName.match(/img/g) && message === ''
+  }
+  ```
+
+5. 过滤业务接口的错误提示导致的`unhandledrejection`错误
+
+  ```javascript
+  // 如果dm_error是接口返回场景的字段
+  Edith.filters = err => {
+    const { target: { tagName = '' }, name } = err
+    return name === 'unhandledrejection' && /dm_error/.test(message)
   }
   ```

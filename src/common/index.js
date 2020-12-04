@@ -13,19 +13,19 @@ export const getErrorInfo = err => {
     extraInfo: err.extraInfo || null,
     stacktrace: err.error && err.error.stack, // 错误的执行栈
     target: err._target,
-    timeStamp: err.timeStamp,
+    timeStamp: ~~err.timeStamp,
     title: document.title, // 报错页面的标题
     referrer, // 从哪个页面跳转过来
     url: location.href,
     userAgent: ua,
     columnNumber: err.colno,
     lineNumber: err.lineno,
-    cookie: document.cookie
+    cookie: document.cookie,
+    version: window.Edith.version, // Edith版本号
     // performance: getPerform(),
     // locale: navigator.browserLanguage || navigator.language,
     // severity: err.severity,
 
-    // appVersion: navigator.appVersion, // js版本号
     // notifierVersion: '1.0.0', // 通知的版本号
     // revideoVersion: '', // 回放插件的版本号 
     // releaseStage: '', // 错误发生的环境，production| development

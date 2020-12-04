@@ -1,5 +1,4 @@
-
-export const serviceRoot = IS_DEV ? 'https://event-edith.op-center.cn' : 'https://event-edith.op-center.cn'
+export const serviceRoot = IS_DEV ? 'http://testevent-edith.op-center.cn' : 'https://event-edith.op-center.cn'
 
 // 存储用户行为的本地数据key
 export const RECORD_KEY = '_edith_record'
@@ -7,7 +6,11 @@ export const RECORD_KEY = '_edith_record'
 // Promise多久未被处理后报错(ms)
 export const PROMISE_TIMEOUT = 500
  // 默认请求白名单，不记录不报错
-const ajaxWhiteList = [`${serviceRoot}/v1/monitor/add`, `${serviceRoot}/v1/upload/test-img`]
+const ajaxWhiteList = [
+  `${serviceRoot}/v1/monitor/add`, 
+  `${serviceRoot}/v1/upload/test-img`,
+    /\/sockjs-node\/info/, // 忽略代理报错
+]
 
 // 状态
 export const EDITH_STATUS = {
@@ -28,23 +31,25 @@ export const innerPlugins = {
   network: () => import('../plugins/NetworkCheckPlugin'),
   redo: () => import('../plugins/RecordPlugin')
 }
-const cdnHost = IS_DEV ? location.origin : '//webcdn.inke.cn/edith.cn'
+const cdnHost = IS_DEV ? `${location.origin}/static` : '//webcdn.inke.cn/edith.cn'
 // 内置插件的cdn地址
 export const innerPluginsCdn = {
   breadcrumbs: {
-    link: `${cdnHost}/static/plugins_${VERSION}/BreadcrumbsPlugin.js`,
+    link: `${cdnHost}/plugins_${EDITH_VERSION}/BreadcrumbsPlugin.js`,
     name: 'BreadcrumbsPlugin'
   },
   network: {
-    link: `${cdnHost}/static/plugins_${VERSION}/NetworkCheckPlugin.js`,
+    link: `${cdnHost}/plugins_${EDITH_VERSION}/NetworkCheckPlugin.js`,
     name: 'NetworkCheckPlugin'
   } ,
   redo: {
-    link: `${cdnHost}/static/plugins_${VERSION}/RecordPlugin.js`,
+    link: `${cdnHost}/plugins_${EDITH_VERSION}/RecordPlugin.js`,
     name: 'RecordPlugin'
   }
 }
 export const remixProps = {
   ajaxWhiteList, 
-  resourceWhiteList: [ ...Object.keys(innerPluginsCdn).map(item => innerPluginsCdn[item].link), '//hm.baidu.com/hm.gif']
+  resourceWhiteList: [
+    ...Object.keys(innerPluginsCdn).map(item => innerPluginsCdn[item].link),
+    '//hm.baidu.com/hm.gif']
 }

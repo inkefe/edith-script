@@ -1,5 +1,5 @@
 import { getTagName, edithAddEventListener, getRandomID, getXPath,
-  isIE8, getOuterHTML, getCurrentTime, getTimeStamp } from '../utils'
+  isIE8, getOuterHTML, getCurrentTime, getTimeStamp, isWhite } from '../utils'
 import { eventTrigger } from '../common'
 
 // 用户行为记录的最多数量
@@ -48,10 +48,10 @@ const addActionRecord = type => event => {
     type,
     time: getCurrentTime(),
     timeStamp: event.timeStamp, 
-    page: {
-      url: location.href,
-      title: document.title
-    },
+    // page: {
+    //   url: location.href,
+    //   title: document.title
+    // },
     detail: {
       className,
       id,
@@ -90,16 +90,16 @@ const addHttpRecord = (xhr, type = 'XMLHttpRequest') => {
   const { method, status, statusText, responseURL, originUrl, body = null,
     startTime, endTime, _eid, timeStamp } = xhr
   const elapsedTime = endTime - startTime // 请求耗时
-  if(ajaxWhiteList.indexOf(originUrl && originUrl.split('?')[0]) >= 0) return //白名单接口不记录
+  if(isWhite(ajaxWhiteList, originUrl) >= 0) return //白名单接口不记录
   const record = {
     eid: _eid,
     type,
     time: getCurrentTime(),
     timeStamp,
-    page: {
-      url: location.href,
-      title: document.title
-    },
+    // page: {
+    //   url: location.href,
+    //   title: document.title
+    // },
     elapsedTime,
     detail: {
       method, // 请求方法
@@ -109,7 +109,7 @@ const addHttpRecord = (xhr, type = 'XMLHttpRequest') => {
       // responseHeader: xhr.getAllResponseHeaders() || {}, // 这个方法不能解构出来赋值
       statusText, // 状态
       responseURL, // 接口响应地址
-      originUrl, // 请求的原始参数地址
+      // originUrl, // 请求的原始参数地址
     }
   }
   breadcrumbs.add(record)
@@ -120,7 +120,7 @@ const recordAjax = () => {
   edithAddEventListener('ajaxOpen', e => {
     const xhr = e.detail
     xhr._eid = getRandomID()
-    xhr.timeStamp = e.timeStamp
+    xhr.timeStamp = ~~e.timeStamp
     addHttpRecord(xhr)
   })
   edithAddEventListener('ajaxProgress', e => {
@@ -252,6 +252,7 @@ class BreadcrumbsPlugin {
         navigationProxy() // 自定义路由跳转事件
         behaviorRecord()
       }
+      // callback(compressString(JSON.stringify(breadcrumbs)))
       callback(breadcrumbs)
     })
   }

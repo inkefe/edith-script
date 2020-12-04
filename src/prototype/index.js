@@ -1,22 +1,21 @@
 import { reportDebug } from '../api'
 import { EDITH_STATUS, innerPluginsCdn, innerPlugins, remixProps } from '../config'
-import { loadCdnScript, getPromiseResult, isFunction, edithAddEventListener } from '../utils'
+import { loadCdnScript, getPromiseResult, isFunction, edithAddEventListener, minSize } from '../utils'
 
 const remix = ['resourceWhiteList', 'ajaxWhiteList']
 class _Edith {
   life = ''
-
+  plugins = []
   state = {
     plugins: {}
   }
-  initSate = this.state
 
   $life (status) {
     this.life = status
   }
 
   // change life
-  init (nextState) {
+  init = (nextState) => {
     if (this.life) return console.warn('只需要初始化一次')
     if(this._waitPromise(nextState)) return
     const { apiKey, silentDev } = nextState || {}
@@ -29,6 +28,7 @@ class _Edith {
       this.notListening = true // 不监听错误了
     }
     this._willMount(nextState);
+    this.initSate = { ...this.state }
     
     // did
     this._didMount(this.state);
@@ -36,22 +36,22 @@ class _Edith {
     this._checkSelf().then(() => {
       this.$life(EDITH_STATUS.INSTALL_PLUGIN)
       // install plugns
-      this._installPlugins().then(() => {
+      this._installPlugins(this).then(() => {
         // star
         this._collecting(); // 加载插件立即初始化一次
         this.initSate = { ...this.state }
       })
       isFunction(this.pluginInstalled) && this.pluginInstalled()
       this.$life(EDITH_STATUS.LISTENING)
-    }).catch(() => this._sleep())
+    }).catch(this._sleep.bind(this))
   }
-  _waitPromise = nextState => {
+  _waitPromise (nextState) {
     if(window.Promise) return
     edithAddEventListener('promisePolyfill', () => this.init(nextState))
     return true
   }
 
-  setState (nextState, byPlugins) {
+  setState = (nextState, byPlugins) => {
     if (this.life === EDITH_STATUS.COLLECTING && !byPlugins) return // 收集错误信息阶段，只允许收集插件的相关信息
     const preState = this.state
     this.state = { ...preState, ...nextState }
@@ -62,7 +62,7 @@ class _Edith {
     this.$life(EDITH_STATUS.WILL_MOUNT)
     isFunction(this.willMount) && this.willMount(nextState)
     this.plugins = plugins instanceof Array ? plugins.filter(Boolean) : []
-    remix.forEach(key => {
+    remix.forEach((key) => {
       this[key] = [...remixProps[key], ...(nextState[key] || [])]
     })
   }
@@ -79,11 +79,9 @@ class _Edith {
         try {
           this.checkSelf()
         } catch (e) {
-          // console.log('edith自检发生错误', e)
+          console.log('edith自检发生错误', e)
           reject(e)
         }
-      } else {
-        // console.log('no check self parts')
       }
       resolve()
     })
@@ -104,11 +102,11 @@ class _Edith {
           }
         } else promiseList.push(plugin)
       })
-      getPromiseResult(promiseList).then(pluginList => {
+      getPromiseResult(promiseList).then((pluginList) => {
         pluginList = pluginList.map(item => isFunction(item.default) ? new item.default() : item).filter(Boolean)
         // 得到对应插件
-        pluginList.forEach(plugin => {
-          remix.forEach(key => { // 混入插件内部定义的链接白名单和http白名单
+        pluginList.forEach((plugin) => {
+          remix.forEach((key) => { // 混入插件内部定义的链接白名单和http白名单
             this[key] = [...this[key], ...(plugin[key] || [])]
           })
         })
@@ -118,7 +116,7 @@ class _Edith {
     })
   }
   // 非内置插件的字段数据都在plugins里
-  compilerCallback (pluginName, subInfo) {
+  compilerCallback = (pluginName, subInfo) => {
     const state = { [pluginName]: subInfo }
     this.setState(innerPluginsCdn[pluginName] ? state : {
       plugins: {
@@ -128,7 +126,7 @@ class _Edith {
     }, true)
   }
 
-  compiler (pluginName, fn) {
+  compiler = (pluginName, fn) => {
     const compilerCallback = this.compilerCallback;
     const that = this;
     fn(this, function (subInfo) {
@@ -138,7 +136,7 @@ class _Edith {
 
   _collecting () { // 收集插件的数据,或用于插件数据初始化
     this.plugins.forEach(plugin => {
-      if (!plugin.apply) return console.warn(`Edith插件[${plugin.constructor.name}]必须实现apply方法`)
+      if (!plugin.apply) return innerPluginsCdn[plugin] || console.warn(`Edith插件[${plugin.constructor.name}]必须实现apply方法`)
       try {
         plugin.apply(this.compiler.bind(this))
       } catch (e) {
@@ -169,6 +167,7 @@ class _Edith {
         ajax: parmas.extraInfo || {},
         target: parmas.target || {},
       }
+      parmas.plugins = minSize(parmas.plugins) // 限制plugins数据大小
       // console.log(parmas)
       if(!(this.filters && this.filters(filtersParmas)) || parmas.type === 'customError') reportDebug(parmas) // filters方法返回真值，则代表拦截
       this.state = this.initSate //上报完成去掉

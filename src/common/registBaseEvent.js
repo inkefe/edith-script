@@ -1,8 +1,8 @@
-import { getCurrentTime, getRandomID, isSuccess, isFunction, getLocalData, saveLocalData } from '../utils'
+import { getCurrentTime, getRandomID, isSuccess, isFunction } from '../utils' // , getLocalData, saveLocalData
 import { eventTrigger } from './index'
 // import { getCLS, getFID, getLCP, getFCP } from 'web-vitals';
-import { getPerform, getHeaders, loadScript } from '../utils'
-import { reportDebug } from '../api'
+import { loadScript } from '../utils' // getPerform
+// import { reportDebug } from '../api'
 
 // CustomEvent的polyfill
 const customEventPolyfill = function () {
@@ -139,7 +139,7 @@ const fetchProxy = function () {
     })
   }
 }
-
+/*
 // 性能监控以及埋点
 function performanceRecode () {
   const page = location.pathname
@@ -183,13 +183,13 @@ function performanceRecode () {
   }
   saveLocalData('performance', oldPerformanceData)
   // 累计位移偏移，CLS（Cumulative Layout Shift），记录了页面上非预期的位移波动。
-  getCLS(setToPageStorage('CLS', page));
+  // getCLS(setToPageStorage('CLS', page));
   // 首次输入延迟，FID（First Input Delay），记录在 FCP 和 TTI 之间用户首次与页面交互时响应的延迟。
-  getFID(setToPageStorage('FID', page));
+  // getFID(setToPageStorage('FID', page));
   // 最大内容绘制，LCP（Largest Contentful Paint），
-  getLCP(setToPageStorage('LCP', page));
+  // getLCP(setToPageStorage('LCP', page));
   // 首次内容绘制，FCP（First Contentful Paint），这个指标用于记录页面首次绘制文本、图片、非空白 Canvas 或 SVG 的时间。
-  getFCP(setToPageStorage('FCP', page))
+  // getFCP(setToPageStorage('FCP', page))
 }
 
 function setToPageStorage (type, page) {
@@ -203,6 +203,7 @@ function setToPageStorage (type, page) {
     saveLocalData('performance', performanceData)
   }
 }
+*/
 
 function promisePolyfill () {
   if(window.Promise) return
