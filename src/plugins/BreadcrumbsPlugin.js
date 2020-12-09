@@ -90,7 +90,7 @@ const addHttpRecord = (xhr, type = 'XMLHttpRequest') => {
   const { method, status, statusText, responseURL, originUrl, body = null,
     startTime, endTime, _eid, timeStamp } = xhr
   const elapsedTime = endTime - startTime // 请求耗时
-  if(isWhite(ajaxWhiteList, originUrl) >= 0) return //白名单接口不记录
+  if(isWhite(ajaxWhiteList, originUrl)) return //白名单接口不记录
   const record = {
     eid: _eid,
     type,
@@ -108,7 +108,7 @@ const addHttpRecord = (xhr, type = 'XMLHttpRequest') => {
       // requestHeader,
       // responseHeader: xhr.getAllResponseHeaders() || {}, // 这个方法不能解构出来赋值
       statusText, // 状态
-      responseURL, // 接口响应地址
+      url: responseURL, // 接口响应地址
       // originUrl, // 请求的原始参数地址
     }
   }
@@ -183,7 +183,6 @@ const addWebSocketRecord = method => event => {
 // 记录WebSocket，建立连接和断开，算两次不同的行为记录
 const recordWebSocket = () => {
   edithAddEventListener('webSocketStart', e => {
-    
     const { target: ws } = e.detail
     ws.startTime = getCurrentTime()
     ws.elapsedTime = 0
@@ -202,7 +201,6 @@ const recordWebSocket = () => {
   })
 
   edithAddEventListener('webSocketClose', e => {
-    
     const { target: ws } = e.detail
     ws._eid = getRandomID()
     ws.endTime = getCurrentTime()

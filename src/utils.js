@@ -86,7 +86,7 @@ export const eventPresent = (e) => {
 // 获取延迟,通过js加载一张1x1的极小图片，来测试图片加载的所用的时长
 export const measureDelay = (fn, count) => {
   count = count || 1
-  let n = 0, timeid
+  let n = 0
   const src = 'https://hm.baidu.com/hm.gif?'
   const ld = () => {
       const t = getCurrentTime(), img = new Image;

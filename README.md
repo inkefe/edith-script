@@ -14,13 +14,11 @@ npm install @inke-design/edith-script -save
 或者CDN引用，注意可以增加版本号来查看是否有更新版本（- 增量部署的策略限制 -）
 
 ```javascript
-<script src="https://webcdn.inke.cn/edith.cn/edith.0.2.3.min.js"></script>
+<script src="https://webcdn.inke.cn/edith.cn/edith.0.2.6.min.js"></script>
 ```
 
 ## 使用方式
 
-
-** npm方式 **
 ```javascript
 // entry.js
 
@@ -60,6 +58,17 @@ Edith.init({
   }
 })
 ```
+## 自定义上报方法
+
+在某些情况下，因一些无法跟踪的业务错误，导致业务出现问题，可以采用自定义上报该错误。
+Edith内部有一个`debug`方法，可以传两个参数，第一个参数为错误名称(字符串)，第二个参数为错误信息，可以是字符串或者对象等。
+  ```javascript
+  if(uid === undefined) Edith.debug('NoUID', {
+    msg: 'uid为空',
+    ...
+  })
+
+  ```
 
 ## filters示例
 1. 过滤name为 TypeError 的错误
@@ -87,21 +96,11 @@ Edith.init({
   }
   ```
 
-4. 过滤url为空字符串的图片加载错误
+3. 过滤url为空字符串的图片加载错误
 
   ```javascript
   Edith.filters = err => {
     const { target: { tagName = '' }, message } = err
     return tagName.match(/img/g) && message === ''
-  }
-  ```
-
-5. 过滤业务接口的错误提示导致的`unhandledrejection`错误
-
-  ```javascript
-  // 如果dm_error是接口返回场景的字段
-  Edith.filters = err => {
-    const { target: { tagName = '' }, name } = err
-    return name === 'unhandledrejection' && /dm_error/.test(message)
   }
   ```
