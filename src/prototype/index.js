@@ -28,7 +28,7 @@ class _Edith {
       this.notListening = true // 不监听错误了
     }
     this._willMount(nextState);
-    this.initSate = { ...this.state }
+    this.initState = { ...this.state }
     
     // did
     this._didMount(this.state);
@@ -39,7 +39,7 @@ class _Edith {
       this._installPlugins(this).then(() => {
         // star
         this._collecting(); // 加载插件立即初始化一次
-        this.initSate = { ...this.state }
+        this.initState = { ...this.state }
       })
       isFunction(this.pluginInstalled) && this.pluginInstalled()
       this.$life(EDITH_STATUS.LISTENING)
@@ -170,7 +170,7 @@ class _Edith {
       parmas.plugins = minSize(parmas.plugins) // 限制plugins数据大小
       // console.log(parmas)
       if(!(this.filters && this.filters(filtersParmas)) || parmas.type === 'customError') reportDebug(parmas) // filters方法返回真值，则代表拦截
-      this.state = this.initSate //上报完成去掉
+      this.state = this.initState //上报完成去掉
       this.$life(EDITH_STATUS.LISTENING)
     }, 0)
   }

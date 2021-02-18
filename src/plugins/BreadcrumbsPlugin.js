@@ -87,14 +87,14 @@ const addUrlRecord = method => event => {
  * 添加http请求记录监控，包括fetch
  */
 const addHttpRecord = (xhr, type = 'XMLHttpRequest') => {
-  const { method, status, statusText, responseURL, originUrl, body = null,
-    startTime, endTime, _eid, timeStamp } = xhr
+  const { method, status, statusText, responseURL, url, body = null,
+    endTime, _eid, timeStamp, startTime } = xhr
   const elapsedTime = endTime - startTime // 请求耗时
-  if(isWhite(ajaxWhiteList, originUrl)) return //白名单接口不记录
+  if(isWhite(ajaxWhiteList, url)) return //白名单接口不记录
   const record = {
     eid: _eid,
     type,
-    time: getCurrentTime(),
+    time: startTime,
     timeStamp,
     // page: {
     //   url: location.href,
@@ -108,8 +108,7 @@ const addHttpRecord = (xhr, type = 'XMLHttpRequest') => {
       // requestHeader,
       // responseHeader: xhr.getAllResponseHeaders() || {}, // 这个方法不能解构出来赋值
       statusText, // 状态
-      url: responseURL, // 接口响应地址
-      // originUrl, // 请求的原始参数地址
+      url: responseURL || url, // 接口响应地址
     }
   }
   breadcrumbs.add(record)
@@ -117,64 +116,47 @@ const addHttpRecord = (xhr, type = 'XMLHttpRequest') => {
 
 // 记录ajax请求
 const recordAjax = () => {
-  edithAddEventListener('ajaxOpen', e => {
-    const xhr = e.detail
-    xhr._eid = getRandomID()
-    xhr.timeStamp = ~~e.timeStamp
+  const callBack = e => {
+    const { target: xhr, time } = e.detail
+    xhr._eid = xhr._eid || getRandomID()
+    xhr.timeStamp = xhr.timeStamp || e.timeStamp
+    xhr.endTime = time // 不断更新状态
     addHttpRecord(xhr)
-  })
-  edithAddEventListener('ajaxProgress', e => {
-    const xhr = e.detail
-    // console.log(xhr)
-    xhr.endTime = getCurrentTime() // 不断更新状态
-    addHttpRecord(xhr)
-  });
+  }
+  edithAddEventListener('ajaxOpen', callBack)
+  edithAddEventListener('ajaxProgress', callBack);
   // 当XHR发生 abort / timeout / error 时事件触，loadend是最后触发的
-  edithAddEventListener('ajaxLoadEnd', e => {
-    const xhr = e.detail
-    xhr.endTime = getCurrentTime()
-    addHttpRecord(xhr)
-  });
+  edithAddEventListener('ajaxLoadEnd', callBack);
 }
 // getAllResponseHeaders没有
 const recordFetch = () => {
-  edithAddEventListener('fetchStart', e => {
-    const { options } = e.detail
+  const callBack = e => {
+    const { target: { options }, time } = e.detail
+    options.timeStamp = options.timeStamp || e.timeStamp
     const xhr = {
       ...options,
-      timeStamp: e.timeStamp,
+      ...e.detail,
+      endTime: time,
       // requestHeader: options.headers
     }
-    // console.log(xhr)
     addHttpRecord(xhr, 'fetchRequest')
-  });
-  edithAddEventListener('fetchEnd', e => {
-    const { options, url } = e.detail
-    const xhr = {
-      ...options,
-      responseURL: url,
-      // requestHeader: options.headers,
-      endTime: getCurrentTime(),
-      timeStamp: e.timeStamp,
-      ...e.detail,
-    }
-    // console.log('fetchEnd=>', xhr.status, e.detail)
-    addHttpRecord(xhr, 'fetchRequest')
-  });
+  }
+  edithAddEventListener('fetchStart', callBack);
+  edithAddEventListener('fetchEnd', callBack);
 }
 
-const addWebSocketRecord = method => event => {
-  const { ws, timeStamp } = event
+const addWebSocketRecord = method => ws => {
+  const { _eid: eid, time, elapsedTime, url, readyState, timeStamp } = ws
   const record = {
-    eid: ws._eid,
+    eid,
     type: 'webSocket',
-    time: getCurrentTime(),
+    time,
     timeStamp,
-    method: method || event.detail.method,
-    elapsedTime: ws.elapsedTime, // 建立连接耗时
+    method,
+    elapsedTime, // 建立连接耗时
     detail: {
-      url: ws.url,
-      readyState: ws.readyState,
+      url,
+      readyState,
     }
   }
   breadcrumbs.add(record)
@@ -182,34 +164,24 @@ const addWebSocketRecord = method => event => {
 
 // 记录WebSocket，建立连接和断开，算两次不同的行为记录
 const recordWebSocket = () => {
-  edithAddEventListener('webSocketStart', e => {
-    const { target: ws } = e.detail
-    ws.startTime = getCurrentTime()
-    ws.elapsedTime = 0
-    ws._eid = getRandomID()
-    // e.detail.timeStamp = e.timeStamp
-    const timeStamp = e.timeStamp
-    addWebSocketRecord('open')({ws, timeStamp})
-  })
-  edithAddEventListener('webSocketOpen', e => {
-    const { target: ws } = e.detail
-    ws.openTime = getCurrentTime()
-    ws.elapsedTime = ws.openTime - ws.startTime
-    // e.detail.timeStamp = e.timeStamp
-    const timeStamp = e.timeStamp
-    addWebSocketRecord('open')({ws, timeStamp})
-  })
+  const callback = (type, isStart) => e => {
+    const { target: ws, time } = e.detail
+    const isOpen = type === 'open'
+    ws._eid = isOpen && !isStart && ws._eid ? ws._eid : getRandomID()
+    ws.openTime = ws.openTime || (isStart ? 0 : time )
 
-  edithAddEventListener('webSocketClose', e => {
-    const { target: ws } = e.detail
-    ws._eid = getRandomID()
-    ws.endTime = getCurrentTime()
-    // e.detail.timeStamp = e.timeStamp
-    const timeStamp = e.timeStamp
-    ws.elapsedTime = ws.endTime - (ws.openTime || ws.startTime)
-    addWebSocketRecord('close')({ws, timeStamp})
-  })
+    ws.time = isOpen ? (ws.time || time) : time
+    ws.startTime = isStart ? time : ws.startTime
+    ws.elapsedTime = isOpen
+      ? time - ws.startTime
+      : time - (ws.openTime || ws.startTime)
 
+    ws.timeStamp = ws.timeStamp || e.timeStamp
+    addWebSocketRecord(type)(ws)
+  }
+  edithAddEventListener('webSocketStart', callback('open', true))
+  edithAddEventListener('webSocketOpen', callback('open'))
+  edithAddEventListener('webSocketClose', callback('close'))
 }
 
 const behaviorRecord = () => {

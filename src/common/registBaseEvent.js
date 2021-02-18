@@ -20,9 +20,8 @@ const customEventPolyfill = function () {
 // 封装XMLHttpRequest，为捕获ajax请求增加自定义事件, 以及内部方法封装，以拿到更多参数
 // xhr.getAllResponseHeaders()  响应头信息
 // xhr.requestHeader            请求头信息
-// xhr.responseURL              请求的地址
 // xhr.responseText             响应内容
-// xhr.originUrl                请求的原始参数地址
+// xhr.url                请求的地址
 // xhr.body                     post参数，（get参数在url上面）
 const xhrProxy = function () {
   const ajaxEvents = {
@@ -76,10 +75,9 @@ const xhrProxy = function () {
     const open = realXHR.open;
     realXHR.open = function (...arg) {
       realXHR.method = arg[0]
-      realXHR.originUrl = arg[1]
+      realXHR.url = arg[1]
       realXHR.async = arg[2]
-      realXHR.startTime = getCurrentTime()
-      realXHR.endTime = getCurrentTime()
+      realXHR.startTime = getCurrentTime() // startTime必须以绝对时间来计算
       eventTrigger.call(realXHR, 'ajaxOpen')
       open.apply(realXHR, arg)
     }
@@ -105,8 +103,6 @@ const fetchProxy = function () {
     const now = getCurrentTime()
     let options = {
       startTime: now,
-      endTime: now,
-      timeStamp: now,
       status: 0,
       body: null,
       statusText: '',
@@ -115,11 +111,10 @@ const fetchProxy = function () {
     }
     if(window.Request && arg instanceof window.Request) {
       const { url, method, body } = arg // , headers: getHeaders(headers)
-      options = { ...options, originUrl: url, method, body,  }
+      options = { ...options, url, method, body,  }
     } else options = {
       url: arg,
       method: 'GET',
-      originUrl: arg,
       ...options,
       ...opt,
       // headers: getHeaders(opt.headers),
@@ -231,16 +226,13 @@ export default function () {
   }
   WebSocket = function (url, protocol) {
     const ws = new oldWs(url, protocol);
-    const options = {
-      url,
-      protocol: protocol || ''
-    }
-    eventTrigger.call({ target: ws }, 'webSocketStart', { options })
+    ws.startTime = getCurrentTime()
+    eventTrigger.call(ws, 'webSocketStart')
     
     Object.keys(wsEvents).forEach(eventName => {
       ws.addEventListener(eventName,
-        function (event) {
-          eventTrigger.call(event, wsEvents[eventName]);
+        function (e) {
+          eventTrigger.call(this, wsEvents[eventName]);
         }, false);
     })
     return ws

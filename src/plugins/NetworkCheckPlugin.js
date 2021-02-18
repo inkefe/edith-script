@@ -1,4 +1,5 @@
-import { getAverage, measureBW, measureDelay, testNetworkSpeed, getNetworkType } from '../utils'
+import { getAverage, getNetworkType, testNetworkSpeed } from '../utils';
+import { measureBW, measureDelay } from '../common'
 
 class NetworkCheckPlugin {
   constructor() {

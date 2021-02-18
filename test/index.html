@@ -5,12 +5,22 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>错误监控Demo</title>
   <!-- <script src="https://cdn.jsdelivr.net/npm/rrweb@latest/dist/record/rrweb-record.min.js"></script> -->
+  <!-- <script src='//webcdn.inke.cn/edith.cn/edith.0.2.8.min.js'></script> -->
   <script src='./static/index.js'></script>
-  <!-- <script src="http://webcdn.inke.cn/edith.cn/edith.0.2.0.min.js"></script> -->
   <script>
+    var edithRegs = [ // 用正则过滤一些常见错误，但不需要处理的字段
+      /Script error\./,
+      /ik_share_title/
+    ]
+    function ingnoreEdith(msg) {
+      return edithRegs.some(function(reg) {
+        return reg.test(msg)
+      })
+    }
     // npm publish --access public
     Edith.init({
-      apiKey: 'YXBpS2V5MTU5NzM5MzkxMw',
+      // apiKey: 'YXBpS2V5MTU5NzI4OTY0MA', // 测试环境的测试api
+      apiKey: 'YXBpS2V5MTU5NzM5MzkxMw', // 正式环境的测试api
       plugins: [
         'breadcrumbs', // 记录用户行为堆栈
         'redo', // 记录录屏
@@ -30,8 +40,9 @@
       silentWebsocket: false,
       silentHttp: false,
       // silentDev: true,
-      filters: res => {
-        console.log(res)
+      filters: err => {
+        var target = err.target, message = err.message, name = err.name, ajax = err.ajax
+        if (ingnoreEdith(message)) return true
         return false
       }
     })
@@ -43,9 +54,10 @@
     //   console.log("错误详情：" , errorObj); 
     // } 
   </script>
-  <!-- <script src="//webcdn.inke.cn/edith.cn/edith.1.0.1.min.js"></script> -->
 </head>
 <body>
+  <!-- <div class="cotain"><img id='12313' src="555" alt="" srcset=""/></div> -->
+  
   按钮组： 
   <button id='err-btn' onclick="myclick()">
     点我触发JS报错
@@ -62,7 +74,7 @@
   <button id='promise-btn' onclick="emitPromiseError()">
     点我触发Promise未捕获的错误
   </button>
-  <button id='fetch-btn' onclick="toFetch()" class="_edith-private">
+  <button id='fetch-btn' onclick="toFetch()" class="edith-private">
     点我发起fetch请求
   </button>
   <button id='fetch-btn' onclick="websocketError()" class="_edith-private">
@@ -75,6 +87,7 @@
     // var e = a.w.d
     function myclick() {
       // location.href = 'http://www.baidu.com'
+      document.getElementById('ik_share_title').innerText(213)
       try{
         var v = cd.ss
       }catch(e){
@@ -167,21 +180,6 @@
   // // 以上述配置开始观察目标节点
   // observer.observe(document.body, config);
 </script>
-<script>
 
-// ios10等低版本浏览器不支持
-var date = new Date("2020-05-17 12:20:00")
-// 均支持
-var date = new Date("2020/05/17 12:20:00")
-var p = new Promise((resolve, reject) => {
-  resolve('resolve')
-  reject('reject')
-  console.log(888)
-  console.log(xx + e)
-  console.log(123)
-})
-p.then(console.log)
-p.catch(console.warn)
-</script>
 </body>
 </html>

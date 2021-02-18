@@ -1,22 +1,28 @@
 import resolve from 'rollup-plugin-node-resolve'
-import babel from 'rollup-plugin-babel'
+import { babel } from '@rollup/plugin-babel';
 import { eslint } from 'rollup-plugin-eslint';
 import { terser } from 'rollup-plugin-terser' // 压缩代码
 import replace from '@rollup/plugin-replace'
 import livereload from 'rollup-plugin-livereload';
 import serve from 'rollup-plugin-serve';
+import cleaner from 'rollup-plugin-cleaner'
 import commonjs from '@rollup/plugin-commonjs' // 解析ES6的导入导出
 // import json from '@rollup/plugin-json' // 解析json
 import pkg from './package.json'
+
+
 const IS_DEV = process.env.NODE_ENV !== 'production'
 const format = process.env.FORMAT || 'iife'
 const EDITH_VERSION = pkg.version
 console.log(EDITH_VERSION)
 const plugins = [
+  !IS_DEV && format !== 'iife' && cleaner({
+    targets: [ './lib' ]
+  }),
   replace({
     IS_DEV: JSON.stringify(IS_DEV),
     FORMAT: JSON.stringify(format),
-     EDITH_VERSION: JSON.stringify(EDITH_VERSION),
+    EDITH_VERSION: JSON.stringify(EDITH_VERSION),
   }),
   resolve(),
   commonjs(),
@@ -24,6 +30,7 @@ const plugins = [
     watch: ['./src', './rollup.config.js', './test/index.html']
   }),
   babel({
+    babelHelpers: 'bundled',
     exclude: 'node_modules/**'
   }),
   !IS_DEV && terser(),
@@ -37,7 +44,6 @@ const plugins = [
   })
 ]
 
-const external = [  ]
 const pluginModule = [
   {
     input: 'src/plugins/RecordPlugin.js',
@@ -45,7 +51,6 @@ const pluginModule = [
       dir: IS_DEV ? `test/static/plugins_${ EDITH_VERSION}` : `dist/plugins_${ EDITH_VERSION}`,
       format, // 打包的类型格式，amd（异步模块定义），cjs（commonjs），es（将软件包保存为es模块文件），iife（适合作为<script>标签），umd（以amd、cjs、iife为一体）
     },
-    external,
     plugins
   },
   {
@@ -54,7 +59,6 @@ const pluginModule = [
       dir: IS_DEV ? `test/static/plugins_${ EDITH_VERSION}` : `dist/plugins_${ EDITH_VERSION}`,
       format, // 打包的类型格式，amd（异步模块定义），cjs（commonjs），es（将软件包保存为es模块文件），iife（适合作为<script>标签），umd（以amd、cjs、iife为一体）
     },
-    external,
     plugins
   },
   {
@@ -63,7 +67,6 @@ const pluginModule = [
       dir: IS_DEV ? `test/static/plugins_${ EDITH_VERSION}` : `dist/plugins_${ EDITH_VERSION}`,
       format, // 打包的类型格式，amd（异步模块定义），cjs（commonjs），es（将软件包保存为es模块文件），iife（适合作为<script>标签），umd（以amd、cjs、iife为一体）
     },
-    external,
     plugins
   }
 ]
@@ -78,7 +81,6 @@ let rollupConfig = [
       // name: 'Edith',
       // exports: 'named'
     },
-    external,
     plugins
   }
 ]

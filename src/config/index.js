@@ -1,4 +1,4 @@
-export const serviceRoot = IS_DEV ? 'http://testevent-edith.op-center.cn' : 'https://event-edith.op-center.cn'
+export const serviceRoot = IS_DEV ? 'https://event-edith.op-center.cn' : 'https://event-edith.op-center.cn'
 
 // 存储用户行为的本地数据key
 export const RECORD_KEY = '_edith_record'
@@ -17,7 +17,6 @@ export const EDITH_STATUS = {
   INIT: 'INIT', // init阶段
   WILL_MOUNT: 'WILL_MOUNT', // 即将mount阶段 （自检，安装插件）
   DID_MOUNT: 'DID_MOUNT', // mounted阶段
-
   CHECK_SELF: 'CHECK_SELF', // 自检
   INSTALL_PLUGIN: 'INSTALL_PLUGIN', // 安装插件
   LISTENING: 'LISTENING', // 错误监听中
@@ -51,5 +50,5 @@ export const remixProps = {
   ajaxWhiteList, 
   resourceWhiteList: [
     ...Object.keys(innerPluginsCdn).map(item => innerPluginsCdn[item].link),
-    '//hm.baidu.com/hm.gif']
+    '//webcdn.inke.cn/edith.cn/hm.gif']
 }

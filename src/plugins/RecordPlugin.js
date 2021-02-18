@@ -20,8 +20,8 @@ class RecordPlugin {
         const lastEvents = that.eventsMatrix[that.eventsMatrix.length - 1];
         lastEvents.push(event);
       },
-      checkoutEveryNth: 100, // 每 100 个 event 重新制作快照
-      checkoutEveryNms: 60 * 1000 // 每60秒重新制作快照
+      checkoutEveryNth: 15, // 每 15 个 event 重新制作快照
+      checkoutEveryNms: 10 * 1000 // 每10秒重新制作快照
     });
 
   }

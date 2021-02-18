@@ -1,5 +1,5 @@
 /* eslint-disable no-undef */
-import { measureBWSimple } from './api'
+
 
 const performance = window.performance
 /**
@@ -59,50 +59,6 @@ export const getNetworkType = () => {
     return n[c][e] //单位为KB/sec
   }
   return ''
-}
-// 通过发起http请求，测试网络速度, 定时调用回调，参数为单位为KB/sec的数值
-export const measureBW = (fn, time) => {
-  const test = n => {
-    const startTime = getCurrentTime();
-    measureBWSimple({ t : Math.random() }).then(res => {
-      const fileSize = res.length
-      const endTime = getCurrentTime();
-      var speed = fileSize / ((endTime - startTime)/1000) / 1024;
-      fn && n && fn(Math.floor(speed));
-      if(n >= time) return
-      test(++n)
-    }).catch(e => {}) 
-  }
-  test(0)
-}
-// 事件阻止
-export const eventPresent = (e) => {
-  if (!e) return
-  const func = ['preventDefault', 'stopPropagation']
-  func.forEach((item) => e[item] && e[item]())
-  e.cancelBubble = true
-}
-
-// 获取延迟,通过js加载一张1x1的极小图片，来测试图片加载的所用的时长
-export const measureDelay = (fn, count) => {
-  count = count || 1
-  let n = 0
-  const src = 'https://hm.baidu.com/hm.gif?'
-  const ld = () => {
-      const t = getCurrentTime(), img = new Image;
-      img.onload = () => {
-          const tcp = getCurrentTime() - t
-          n++
-          fn(tcp) // 存储延迟回调
-          if(n < count) timeid = setTimeout(ld, 1000)
-      }
-    img.src = src + Math.random()
-    img.onerror = tryCatchFunc(eventPresent)
-  }
-  const img_start = new Image()
-  img_start.onerror = tryCatchFunc(eventPresent)
-  img_start.onload = ld
-  img_start.src = src + Math.random()
 }
 
 /**
@@ -235,7 +191,6 @@ export const getAverage = (arr) => {
 export const loadScript = (url, cb, reject = () => {}) => {
   const script = document.createElement('script')
   script.setAttribute('cdn-rendered', '')
-  script.setAttribute('crossorigin', '')
   script.src = url
   script.onload = cb
   script.onerror = reject
@@ -251,7 +206,7 @@ const removeHttpAndQuery = (url) =>
   url.replace(/^[^/]*:?\/\//, '').split('?')[0]
 // 判断是不是在白名单
 export const isWhite = (list, url) => {
-  return list.find((i) => {
+  return list.some((i) => {
     if (i instanceof RegExp) return i.test(url)
     if (typeof i !== 'string') return
     return removeHttpAndQuery(i) === removeHttpAndQuery(url)
@@ -303,6 +258,14 @@ export const minSize = tryCatchFunc((params) => {
   }
   return res
 })
+export function setScriptCross() {
+  var scripts = document.getElementsByTagName('script')
+  for (var s of scripts) {
+    let url = removeHttpAndQuery(s.src || '')
+    url && url[0] !== '/' && s.setAttribute('crossorigin', 'anonymous');
+  }
+}
+
 /*
 // 汉字转unicode
 export const ch2Unicode = (data) => {
