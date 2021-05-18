@@ -7,6 +7,7 @@
 ---
 
 ## 开发
+
 [开发请看](./DEVELOPMENT.md)
 
 ## 安装
@@ -14,13 +15,17 @@
 ```bash
 npm install @inke-design/edith-script -save
 ```
-或者CDN引用，注意可以增加版本号来查看是否有更新版本（- 增量部署的策略限制 -）
+
+或者CDN引用，脚本一直会更新到最新版本，不需要更换链接，也支持放在其他域名路径下，[下载cdn源码](https://webcdn.inke.cn/edith.cn/edith.cn.zip)
 建议放在`<head>`里，以保证错误和记录数据更加准确
+
 ```javascript
-<script src="https://webcdn.inke.cn/edith.cn/edith.0.3.0.min.js"></script>
+<script src="https://webcdn.inke.cn/edith.cn/edith.min.js"></script>
 ```
 
 ## 使用方式
+
+- npm方式
 
 ```javascript
 // entry.js
@@ -32,8 +37,26 @@ Edith.init({
   silentDev: true, // 开发环境下不上报，根据域名是否为ip或者localhost来判断
   plugins: [ // 内置插件
     'breadcrumbs', // 记录用户行为堆栈
+    'redo', // 记录录屏
+    'network', // 记录网络信息
   ]
 })
+```
+
+- CDN方式
+
+```javascript
+document.addEventListener('EdithJsReady', () => {
+  window.Edith.init({
+    apiKey: 'apikey', // 用于区分不同项目
+    silentDev: true, // 开发环境下不上报，根据域名是否为ip或者localhost来判断
+    plugins: [ // 内置插件
+      'breadcrumbs', // 记录用户行为堆栈
+      'redo', // 记录录屏
+      'network', // 记录网络信息
+    ]
+  })
+}, false);
 ```
 
 ## 其他参数
@@ -59,10 +82,12 @@ Edith.init({
   }
 })
 ```
+
 ## 自定义上报方法
 
 在某些情况下，因一些无法跟踪的业务错误，导致业务出现问题，可以采用自定义上报该错误。
 Edith内部有一个`debug`方法，可以传两个参数，第一个参数为错误名称(字符串)，第二个参数为错误信息，可以是字符串或者对象等。
+
   ```javascript
   if(uid === undefined) Edith.debug('NoUID', {
     msg: 'uid为空',
@@ -74,10 +99,13 @@ Edith内部有一个`debug`方法，可以传两个参数，第一个参数为�
 ## 录屏隐私处理
 
 有些业务，可能由于涉及到隐私和不宜公开的信息，不希望录屏上报到后台，需要给指定的`DOM`做隐私处理。
+
 - 在`HTML`元素中添加类名`.edith-block`将会避免该元素及其子元素被录制，回放时取而代之的是一个同等宽高的占位元素。
 - 在`HTML`元素中添加类名`.edith-ignore`将会避免录制该元素的输入事件。
 - `input[type="password"]`类型的密码输入框默认不会录制输入事件。
+
 ## filters参数示例
+
 1. 过滤name为 TypeError 的错误
 
   ```javascript
@@ -103,7 +131,7 @@ Edith内部有一个`debug`方法，可以传两个参数，第一个参数为�
   }
   ```
 
-3. 过滤url为空字符串的图片加载错误
+4. 过滤url为空字符串的图片加载错误
 
   ```javascript
   Edith.filters = err => {
