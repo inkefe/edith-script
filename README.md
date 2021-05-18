@@ -17,6 +17,7 @@ npm install @inke-design/edith-script -save
 ```
 
 或者CDN引用，脚本一直会更新到最新版本，不需要更换链接，也支持放在其他域名路径下，[下载cdn源码](https://webcdn.inke.cn/edith.cn/edith.cn.zip)
+
 建议放在`<head>`里，以保证错误和记录数据更加准确
 
 ```javascript
