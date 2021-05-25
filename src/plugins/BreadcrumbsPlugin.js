@@ -1,5 +1,5 @@
 import { getTagName, edithAddEventListener, getRandomID, getXPath,
-  isIE8, getOuterHTML, getCurrentTime, getTimeStamp, isWhite } from '../utils'
+  isIE8, getOuterHTML, getCurrentTime, getTimeStamp, isWhite, compressString } from '../utils'
 import { eventTrigger } from '../common'
 
 // 用户行为记录的最多数量
@@ -47,7 +47,7 @@ const addActionRecord = type => event => {
   const record = {
     type,
     time: getCurrentTime(),
-    timeStamp: event.timeStamp, 
+    timeStamp: getTimeStamp(), 
     // page: {
     //   url: location.href,
     //   title: document.title
@@ -68,7 +68,7 @@ const addUrlRecord = method => event => {
     type: 'navigation',
     time: getCurrentTime(),
     method: method || event.detail.method,
-    timeStamp: event.timeStamp,
+    timeStamp: getTimeStamp(),
     detail: {
       from: {
         url: event.oldURL || event.detail.oldURL,
@@ -119,7 +119,7 @@ const recordAjax = () => {
   const callBack = e => {
     const { target: xhr, time } = e.detail
     xhr._eid = xhr._eid || getRandomID()
-    xhr.timeStamp = xhr.timeStamp || e.timeStamp
+    xhr.timeStamp = xhr.timeStamp || getTimeStamp()
     xhr.endTime = time // 不断更新状态
     addHttpRecord(xhr)
   }
@@ -132,7 +132,7 @@ const recordAjax = () => {
 const recordFetch = () => {
   const callBack = e => {
     const { target: { options }, time } = e.detail
-    options.timeStamp = options.timeStamp || e.timeStamp
+    options.timeStamp = options.timeStamp || getTimeStamp()
     const xhr = {
       ...options,
       ...e.detail,
@@ -176,7 +176,7 @@ const recordWebSocket = () => {
       ? time - ws.startTime
       : time - (ws.openTime || ws.startTime)
 
-    ws.timeStamp = ws.timeStamp || e.timeStamp
+    ws.timeStamp = ws.timeStamp || getTimeStamp()
     addWebSocketRecord(type)(ws)
   }
   edithAddEventListener('webSocketStart', callback('open', true))
@@ -222,8 +222,8 @@ class BreadcrumbsPlugin {
         navigationProxy() // 自定义路由跳转事件
         behaviorRecord()
       }
-      // callback(compressString(JSON.stringify(breadcrumbs)))
-      callback(breadcrumbs)
+      callback(compressString(breadcrumbs))
+      // callback(breadcrumbs)
     })
   }
 }

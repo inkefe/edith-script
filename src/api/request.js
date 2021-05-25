@@ -1,6 +1,5 @@
 import { stringifyParams } from '../utils'
 let xmlhttp = null
-let root = '/'
 
 const getPromise = (xmlhttp, callback) => new Promise((resolve, reject) => {
   xmlhttp.onreadystatechange = () => {
@@ -22,28 +21,39 @@ const getPromise = (xmlhttp, callback) => new Promise((resolve, reject) => {
 })
 
 const request = {
-  setRoot: host => {
-    root = host
+  root: '/',
+  setRoot(host) {
+    this.root = host
   },
-  get: url => (parmas = {}) => {
-    xmlhttp = new XMLHttpRequest()
-    return getPromise(xmlhttp, () => {
-      xmlhttp.open('GET', `${root}${url}?${stringifyParams(parmas)}`, true)
-      // xmlhttp.withCredentials = true;
-      xmlhttp.send()
-    })
+  getRootByUrl(url) {
+    url = url.replace(/^http(s?):\/\//, '//')
+    return url.match(/^\/\//) ? '' : this.root
   },
-  post: url => (parmas = {}) => {
-    xmlhttp = new XMLHttpRequest()
-    const fn = () => {
-      xmlhttp.open('POST', `${root}${url}`, true)
-      xmlhttp.setRequestHeader('Content-type','application/json;charset=utf-8');
-      // xmlhttp.withCredentials = true;
-      xmlhttp.send(JSON.stringify(parmas));
+  get(url) {
+    return (parmas = {}) => {
+      xmlhttp = new XMLHttpRequest()
+      const root = this.getRootByUrl(url)
+      return getPromise(xmlhttp, () => {
+        xmlhttp.open('GET', `${root}${url}?${stringifyParams(parmas)}`, true)
+        // xmlhttp.withCredentials = true;
+        xmlhttp.send()
+      })
     }
-    if(IS_DEV){
-      return getPromise(xmlhttp, fn)
-    }else fn()
+  },
+  post(url) {
+    return (parmas = {}) => {
+      xmlhttp = new XMLHttpRequest()
+      const root = this.getRootByUrl(url)
+      const fn = () => {
+        xmlhttp.open('POST', `${root}${url}`, true)
+        xmlhttp.setRequestHeader('Content-type','application/json;charset=utf-8');
+        // xmlhttp.withCredentials = true;
+        xmlhttp.send(JSON.stringify(parmas));
+      }
+      if(IS_DEV){
+        return getPromise(xmlhttp, fn)
+      }else fn()
+    }
   }
 }
 

@@ -1,6 +1,8 @@
-/* eslint-disable no-undef */
+// /* eslint-disable no-undef */
 
-
+import LZString from 'lz-string'
+// import LZString from './LzString'
+// console.log(LZString.compress('object'))
 const performance = window.performance
 /**
  * 参数格式化, 符合url方式
@@ -19,7 +21,6 @@ export const stringifyParams = (params, cb) => {
         cb(value, name) :
         value && typeof value === 'object' && !Object.getPrototypeOf(value).slice ? JSON.stringify(value) : value ) + '&'
   }
-
   return str.slice(0, -1)
 }
 
@@ -98,9 +99,9 @@ export const getLocalData = (key, isSession) => {
 }
 
 // 对方法进行封装，防止内部报错
-export const tryCatchFunc = (fn) =>
-  function(...args) {
+export const tryCatchFunc = (fn) => function(...args) {
     try {
+      typeof fn !== 'function' && (fn = () => {})
       return fn.apply(this, args)
     } catch (error) {
       console.warn('edith 内部报错', error)
@@ -109,12 +110,13 @@ export const tryCatchFunc = (fn) =>
 
 // 通用事件监听方法
 export const edithAddEventListener = (name, fn, useCapture) => {
+  
   if (addEventListener) {
     // 所有主流浏览器，除了 IE 8 及更早版本
     addEventListener(name, tryCatchFunc(fn), useCapture)
-  } else if (attachEvent) {
+  } else if (window.attachEvent) {
     // IE 8 及更早版本
-    attachEvent(`on${name}`, tryCatchFunc(fn))
+    window.attachEvent(`on${name}`, tryCatchFunc(fn))
   }
 }
 
@@ -219,13 +221,9 @@ export const getPromiseResult = (promises) => {
   )
   return handlePromise
 }
-// 页面打开的时间
-export const startTiming =
-  (performance.timing && performance.timing.navigationStart) ||
-  getCurrentTime()
 
 // 获取当前相对于页面打开时的时间戳
-export const getTimeStamp = () => ~~(getCurrentTime() - startTiming)
+export const getTimeStamp = () => ~~(performance.now())
 
 export const isFunction = fn => typeof fn === 'function'
 
@@ -233,7 +231,7 @@ export const isFunction = fn => typeof fn === 'function'
 export const getHeaders = h => {
   const header = {}
   if (h instanceof Headers) {
-    for (var p of headers) {
+    for (var p of h) {
       header[p[0]] = p[1]
     }
     return header
@@ -241,31 +239,37 @@ export const getHeaders = h => {
   return h
 }
 const MORE_DATA_TIP = '[large size Edith Plugins Data]'
-const MIN_SIZE = 2048 * 1024
+const MIN_SIZE = 6 * 1024 * 1024 // 4kb
 export const minSize = tryCatchFunc((params) => {
   const res = {}
   for (var name in params) {
     var value = params[name]
-    if (typeof value === 'object') {
-      value = value && JSON.stringify(value)
-    }
-    res[name] =
-      typeof value === 'string'
-        ? value > MIN_SIZE
+    res[name] = transToString(value) > MIN_SIZE
           ? MORE_DATA_TIP
           : value
-        : value
   }
   return res
 })
+// 给外链script添加crossorigin属性，防止报anonymous错误
 export function setScriptCross() {
+  LZString.compressToBase64('str')
   var scripts = document.getElementsByTagName('script')
   for (var s of scripts) {
-    let url = removeHttpAndQuery(s.src || '')
+    const url = removeHttpAndQuery(s.src || '')
     url && url[0] !== '/' && s.setAttribute('crossorigin', 'anonymous');
   }
 }
 
+// 将每个错误生成唯一key，用错判断是否为重复错误
+export function getOnlyTag(err) {
+  
+}
+export function compressString (str) {
+  return LZString.compressToBase64(transToString(str))
+}
+export function deCompressString (str) {
+  return LZString.decompressFromBase64(str)
+}
 /*
 // 汉字转unicode
 export const ch2Unicode = (data) => {

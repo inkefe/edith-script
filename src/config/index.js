@@ -1,4 +1,5 @@
-export const serviceRoot = IS_DEV ? 'https://event-edith.op-center.cn' : 'https://event-edith.op-center.cn'
+// http://testevent-edith.op-center.cn
+export const serviceRoot = IS_DEV ? 'http://testevent-edith.op-center.cn' : 'https://event-edith.op-center.cn'
 
 // 存储用户行为的本地数据key
 export const RECORD_KEY = '_edith_record'
@@ -30,19 +31,27 @@ export const innerPlugins = {
   network: () => import('../plugins/NetworkCheckPlugin'),
   redo: () => import('../plugins/RecordPlugin')
 }
-const cdnHost = IS_DEV ? `${location.origin}/static` : '//webcdn.inke.cn/edith.cn'
+const scriptPath = () => {
+  const url = document.currentScript.src
+  const link = document.createElement('a')
+  link.href = url
+  const path = (`${link.hostname}${link.port ?  ':' + link.port : ''}${link.pathname}`).replace(/\/[^/]+$/, '')
+  return path
+}
+const cdnPath = `//${scriptPath() || 'webcdn.inke.cn/edith.cn'}`
+
 // 内置插件的cdn地址
 export const innerPluginsCdn = {
   breadcrumbs: {
-    link: `${cdnHost}/plugins_${EDITH_VERSION}/BreadcrumbsPlugin.js`,
+    link: `${cdnPath}/plugins/BreadcrumbsPlugin.js`,
     name: 'BreadcrumbsPlugin'
   },
   network: {
-    link: `${cdnHost}/plugins_${EDITH_VERSION}/NetworkCheckPlugin.js`,
+    link: `${cdnPath}/plugins/NetworkCheckPlugin.js`,
     name: 'NetworkCheckPlugin'
   } ,
   redo: {
-    link: `${cdnHost}/plugins_${EDITH_VERSION}/RecordPlugin.js`,
+    link: `${cdnPath}/plugins/RecordPlugin.js`,
     name: 'RecordPlugin'
   }
 }

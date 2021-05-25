@@ -1,5 +1,5 @@
 import { measureBWSimple } from '../api'
-import { getCurrentTime, tryCatchFunc } from '../utils'
+import { getCurrentTime, tryCatchFunc, getTimeStamp } from '../utils'
 
 const ua = navigator.userAgent
 const referrer = document.referrer
@@ -11,12 +11,12 @@ export const eventTrigger = function (event) {
 export const getErrorInfo = err => {
   return {
     type: err._type || err.type, // 错误的类型，如httpError
-    name: (err.name || err.message && err.message.split(':')[0] || err.type).replace(/^Uncaught\s/, ''), // 错误信息的名称
+    name: (err.name || err.message && err.message.split(':')[0] || err.type)?.replace(/^Uncaught\s/, ''), // 错误信息的名称
     message: err.message || err.description || '', // 错误信息的内容
     extraInfo: err.extraInfo || null,
     stacktrace: err.error && err.error.stack, // 错误的执行栈
     target: err._target,
-    timeStamp: ~~err.timeStamp,
+    timeStamp: getTimeStamp(),
     title: document.title, // 报错页面的标题
     referrer, // 从哪个页面跳转过来
     url: location.href,
@@ -81,4 +81,3 @@ export const measureDelay = (fn, count) => {
   img_start.onload = ld
   img_start.src = src + Math.random()
 }
-

@@ -8,17 +8,19 @@ module.exports = {
     'globals': {
         'Atomics': 'readonly',
         'SharedArrayBuffer': 'readonly',
-        'ENV': true
+        'ENV': true,
+        'EDITH_VERSION': 'readonly',
+        'IS_DEV': 'readonly',
+        'FORMAT': 'readonly',
     },
+    "parser": "babel-eslint",
     'parserOptions': {
         'ecmaVersion': 2018,
-        'sourceType': 'module'
+        'sourceType': 'module',
+        "codeFrame": false
     },
+    "plugins": [],
     'rules': {
-        'linebreak-style': [
-          'error',
-          'unix'
-        ],
         'no-constant-condition': 0,
         'no-global-assign': 0,
         'quotes': 0,

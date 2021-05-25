@@ -5,11 +5,11 @@
 
 # testing
 /coverage
-/test/static
+
 # production
 /build
 /_dist
-
+/test/static
 # misc
 .idea
 .DS_Store

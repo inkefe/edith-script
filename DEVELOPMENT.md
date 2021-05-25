@@ -9,3 +9,8 @@
 
 - npm打包
 运行`npm run build:es`
+
+## 部署到npm
+
+- `npm login`
+- `npm publish --access public`

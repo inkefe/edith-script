@@ -5,13 +5,14 @@
       {
         "modules": false,
         "useBuiltIns": "usage",
-        "corejs": 3
+        "corejs": 2,
+        "loose" : true
       }
     ]
   ],
   "plugins": [
     "@babel/plugin-syntax-dynamic-import",
-    "@babel/plugin-external-helpers",
+    // "@babel/plugin-external-helpers",
     ["@babel/plugin-proposal-class-properties", { "loose" : true }]
   ]
 }

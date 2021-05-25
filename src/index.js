@@ -1,9 +1,10 @@
 import _Edith from './prototype'
+import reportRequest from './api/request'
 import registBaseEvent from './common/registBaseEvent'
 import { getErrorInfo } from  './common'
 import { PROMISE_TIMEOUT, EDITH_STATUS } from './config'
 import { tryCatchFunc, edithAddEventListener, getTagName, getOuterHTML, getXPath,
-  transToString, isWhite, getTimeStamp, isFunction, setScriptCross} from './utils'
+  transToString, isWhite, getTimeStamp, isFunction, setScriptCross, getCurrentTime} from './utils'
 
 class EdithClass extends _Edith {
   
@@ -20,6 +21,7 @@ class EdithClass extends _Edith {
       if(options[prop] !== void 0 && !isFunction(this[prop]) && prop !== 'version')
         this[prop] = options[prop]
     }
+    this.filters = options.filters && tryCatchFunc(options.filters)
   }
   didMount() {
     registBaseEvent() // 注册基础事件
@@ -34,11 +36,11 @@ class EdithClass extends _Edith {
     this.silentResource || this.handleError({ type: 'error', target: {src: '', tagName: 'a', outerHTML: '', parentNode: document} })
     this.silentHttp || this.handleError({ type: 'ajaxError', detail: { target: { url: ''} } })
     this.silentHttp || this.handleError({ type: 'fetchError', detail: { target: {options: {url: ''}} } })
-    setScriptCross()
   }
 
   pluginInstalled() {
     if(this.notListening) return
+    setScriptCross()
     // 全局error监听，js报错，包括资源加载报错
     edithAddEventListener('error', this.handleError, true)
     // 全局promise no catch error监听，捕获未处理的promise异常
@@ -89,8 +91,8 @@ class EdithClass extends _Edith {
     this.setState({
       ...this.state,
       ...getErrorInfo({
-        name,
-        message,
+        name: transToString(name),
+        message: transToString(message),
         timeStamp: getTimeStamp(),
         type: 'customError'
       })
@@ -106,7 +108,7 @@ class EdithClass extends _Edith {
       if(isWhite(this.ajaxWhiteList, url)) return // 白名单不做上报
       errorEvent.extraInfo = {
         url,
-        elapsedTime : errorEvent.timeStamp - (openTime || startTime)
+        elapsedTime : getCurrentTime() - (openTime || startTime)
       }
       return errorEvent
     },
@@ -175,6 +177,12 @@ class EdithClass extends _Edith {
       }
       return errorEvent
     }
+  }
+
+  _changeReportUrl(url) {
+    if(!url) return
+    this.ajaxWhiteList.push(url)
+    this.reportDebug = reportRequest.post(url + '')
   }
 }
 

@@ -1,6 +1,6 @@
 import { reportDebug } from '../api'
 import { EDITH_STATUS, innerPluginsCdn, innerPlugins, remixProps } from '../config'
-import { loadCdnScript, getPromiseResult, isFunction, edithAddEventListener, minSize } from '../utils'
+import { loadCdnScript, getPromiseResult, isFunction, edithAddEventListener, minSize, compressString } from '../utils'
 
 const remix = ['resourceWhiteList', 'ajaxWhiteList']
 class _Edith {
@@ -24,7 +24,7 @@ class _Edith {
     }
     this.$life(EDITH_STATUS.INIT)
     this.setState({ api_key: apiKey })
-    if (silentDev && location.host.match(/^localhost|^\d+\.\d+\./)) {
+    if (silentDev && location.host.match(/^localhost|[\d.]+$/)) {
       this.notListening = true // 不监听错误了
     }
     this._willMount(nextState);
@@ -115,7 +115,7 @@ class _Edith {
       })
     })
   }
-  // 非内置插件的字段数据都在plugins里
+  // 非内置插件的字段数据都在plugins里，内置插件属性的值直接添加到state里
   compilerCallback = (pluginName, subInfo) => {
     const state = { [pluginName]: subInfo }
     this.setState(innerPluginsCdn[pluginName] ? state : {
@@ -152,12 +152,14 @@ class _Edith {
     isFunction(this.sleep) && this.sleep()
     this.$handleCollect = () => { } // 停止上传
   }
+
+  reportDebug = reportDebug
+
   // 上报
   $handleCollect () {
     if (this.life !== EDITH_STATUS.LISTENING) return // 收集错误信息过程中不上报
     this.$life(EDITH_STATUS.COLLECTING)
     setTimeout(() => { // 在所有队列后执行错误，避免点击立即出发的报错，没有记录点击事件
-      this._collecting()
       const parmas = { ...this.state }
       const filtersParmas = {
         name: parmas.name,
@@ -167,9 +169,14 @@ class _Edith {
         ajax: parmas.extraInfo || {},
         target: parmas.target || {},
       }
-      parmas.plugins = minSize(parmas.plugins) // 限制plugins数据大小
       // console.log(parmas)
-      if(!(this.filters && this.filters(filtersParmas)) || parmas.type === 'customError') reportDebug(parmas) // filters方法返回真值，则代表拦截
+      if(!(this.filters(filtersParmas)) || parmas.type === 'customError'){
+        this._collecting() // 收集插件数据
+        this.reportDebug({
+          ...this.state,
+          plugins: compressString(minSize(this.state.plugins)) // 限制plugins数据大小
+        }) // filters方法返回真值，则代表拦截
+      } 
       this.state = this.initState //上报完成去掉
       this.$life(EDITH_STATUS.LISTENING)
     }, 0)

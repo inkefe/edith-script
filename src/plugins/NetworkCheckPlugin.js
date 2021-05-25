@@ -19,7 +19,7 @@ class NetworkCheckPlugin {
     measureBW(speed => this.speeds.push(speed), 1)
   }
   checkDelay () {
-    measureDelay(tcp => this.delays.push(tcp), 3)
+    measureDelay(tcp => this.delays.push(tcp), 4)
   }
   startCheck() {
     const rIC = window.requestIdleCallback
