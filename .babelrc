@@ -1,12 +1,14 @@
 {
   "presets": [
     [
-      "@babel/env",
+      "@babel/preset-env",
       {
         "modules": false,
-        "useBuiltIns": "usage",
-        "corejs": 2,
-        "loose" : true
+        "loose": true,
+        "targets": {
+          "browsers": "> 1%, IE 11, not op_mini all, not dead",
+          "node": 8
+        }
       }
     ]
   ],
@@ -14,5 +16,8 @@
     "@babel/plugin-syntax-dynamic-import",
     // "@babel/plugin-external-helpers",
     ["@babel/plugin-proposal-class-properties", { "loose" : true }]
+  ],
+  "ignore": [
+    "node_modules/**"
   ]
 }

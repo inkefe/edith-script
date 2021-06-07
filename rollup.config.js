@@ -48,6 +48,7 @@ const pluginModule = [
   {
     input: 'src/plugins/RecordPlugin.js',
     output: {
+      name: 'Edith.RecordPlugin',
       dir: IS_DEV ? `test/static/plugins` : `dist/plugins`,
       format, // 打包的类型格式，amd（异步模块定义），cjs（commonjs），es（将软件包保存为es模块文件），iife（适合作为<script>标签），umd（以amd、cjs、iife为一体）
     },
@@ -56,6 +57,7 @@ const pluginModule = [
   {
     input: 'src/plugins/BreadcrumbsPlugin.js',
     output: {
+      name: 'Edith.BreadcrumbsPlugin',
       dir: IS_DEV ? `test/static/plugins` : `dist/plugins`,
       format, // 打包的类型格式，amd（异步模块定义），cjs（commonjs），es（将软件包保存为es模块文件），iife（适合作为<script>标签），umd（以amd、cjs、iife为一体）
     },
@@ -64,6 +66,7 @@ const pluginModule = [
   {
     input: 'src/plugins/NetworkCheckPlugin.js',
     output: {
+      name: 'Edith.NetworkCheckPlugin',
       dir: IS_DEV ? `test/static/plugins` : `dist/plugins`,
       format, // 打包的类型格式，amd（异步模块定义），cjs（commonjs），es（将软件包保存为es模块文件），iife（适合作为<script>标签），umd（以amd、cjs、iife为一体）
     },
@@ -78,7 +81,7 @@ let rollupConfig = [
       dir: IS_DEV ? 'test/static' : format === 'iife' ? void 0 : 'lib',
       file: !IS_DEV && format === 'iife' ? `dist/edith.min.js` : void 0,
       format, // 打包的类型格式，amd（异步模块定义），cjs（commonjs），es（将软件包保存为es模块文件），iife（适合作为<script>标签），umd（以amd、cjs、iife为一体）
-      // name: 'Edith',
+      name: 'Edith',
       // exports: 'named'
     },
     plugins

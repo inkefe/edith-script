@@ -1,13 +1,23 @@
-import { reportDebug } from '../api'
+
+import { isFunction } from '../common'
+import { reportDebug, measureBWSimple } from '../api'
 import { EDITH_STATUS, innerPluginsCdn, innerPlugins, remixProps } from '../config'
-import { loadCdnScript, getPromiseResult, isFunction, edithAddEventListener, minSize, compressString } from '../utils'
+import { loadCdnScript, getPromiseResult, edithAddEventListener, minSize, compressData, reportEdithError, transToString } from '../utils'
 
 const remix = ['resourceWhiteList', 'ajaxWhiteList']
+
 class _Edith {
   life = ''
   plugins = []
   state = {
     plugins: {}
+  }
+
+  utils = {
+    compressData,
+    compressString: compressData,
+    measureBWSimple,
+    edithAddEventListener
   }
 
   $life (status) {
@@ -61,7 +71,7 @@ class _Edith {
     const { plugins } = nextState
     this.$life(EDITH_STATUS.WILL_MOUNT)
     isFunction(this.willMount) && this.willMount(nextState)
-    this.plugins = plugins instanceof Array ? plugins.filter(Boolean) : []
+    this.plugins = plugins instanceof Array ? plugins : []
     remix.forEach((key) => {
       this[key] = [...remixProps[key], ...(nextState[key] || [])]
     })
@@ -80,6 +90,7 @@ class _Edith {
           this.checkSelf()
         } catch (e) {
           console.log('edith自检发生错误', e)
+          reportEdithError('SelfCheckError', e)
           reject(e)
         }
       }
@@ -92,21 +103,22 @@ class _Edith {
       // console.log(this.plugins)
       const promiseList = []
       this.plugins.forEach(plugin => {
+        if(!plugin) return
         if (typeof plugin === 'string') {
           if (FORMAT === 'iife') { // 如果打包成cdn链接
             const inner = innerPluginsCdn[plugin]
             inner && promiseList.push(loadCdnScript(inner.link, inner.name))
-          } else if (FORMAT === 'es') { // 如果打包成npm模块
+          } else { // 如果打包成npm模块
             const inner = innerPlugins[plugin]
             inner && promiseList.push(inner())
           }
         } else promiseList.push(plugin)
       })
       getPromiseResult(promiseList).then((pluginList) => {
-        pluginList = pluginList.map(item => isFunction(item.default) ? new item.default() : item).filter(Boolean)
+        pluginList = pluginList.map(item => isFunction(item.default) ? new item.default() : item)
         // 得到对应插件
         pluginList.forEach((plugin) => {
-          remix.forEach((key) => { // 混入插件内部定义的链接白名单和http白名单
+          plugin && remix.forEach((key) => { // 混入插件内部定义的链接白名单和http白名单
             this[key] = [...this[key], ...(plugin[key] || [])]
           })
         })
@@ -136,11 +148,16 @@ class _Edith {
 
   _collecting () { // 收集插件的数据,或用于插件数据初始化
     this.plugins.forEach(plugin => {
+      const { name }= plugin.constructor
       if (!plugin.apply) return innerPluginsCdn[plugin] || console.warn(`Edith插件[${plugin.constructor.name}]必须实现apply方法`)
       try {
         plugin.apply(this.compiler.bind(this))
       } catch (e) {
-        console.log(e)
+        reportEdithError('CollectError',{
+          error: transToString(e),
+          plugin: name,
+          life: this.life
+        })
       }
     })
     isFunction(this.collecting) && this.collecting()
@@ -159,14 +176,16 @@ class _Edith {
   $handleCollect () {
     if (this.life !== EDITH_STATUS.LISTENING) return // 收集错误信息过程中不上报
     this.$life(EDITH_STATUS.COLLECTING)
-    setTimeout(() => { // 在所有队列后执行错误，避免点击立即出发的报错，没有记录点击事件
+    var timer = setTimeout(() => { // 在所有队列后执行错误，避免点击立即出发的报错，没有记录点击事件
       const parmas = { ...this.state }
       const filtersParmas = {
         name: parmas.name,
         message: parmas.message,
         url: parmas.url,
         title: parmas.title,
-        ajax: parmas.extraInfo || {},
+        ajax: parmas.extraInfo || {
+          url: ''
+        },
         target: parmas.target || {},
       }
       // console.log(parmas)
@@ -174,12 +193,14 @@ class _Edith {
         this._collecting() // 收集插件数据
         this.reportDebug({
           ...this.state,
-          plugins: compressString(minSize(this.state.plugins)) // 限制plugins数据大小
+          plugins: compressData(minSize(this.state.plugins)) // 限制plugins数据大小
         }) // filters方法返回真值，则代表拦截
       } 
       this.state = this.initState //上报完成去掉
       this.$life(EDITH_STATUS.LISTENING)
-    }, 0)
+      window.clearTimeout(timer)
+      timer = null
+    }, 16)
   }
 }
 

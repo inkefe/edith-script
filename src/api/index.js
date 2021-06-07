@@ -8,6 +8,8 @@ export const reportDebug = reportRequest.post('/v1/monitor/add'); //上报
 
 export const measureBWSimple = reportRequest.get('/v1/upload/test-img'); //测试网速
 
+export const reportScriptError = reportRequest.post('/v1/monitor/script-add') // 上报脚本自身错误
+
 if(IS_DEV) {
   const postEnv = reportRequest.post('/v1/apikey-env/update'); //上报
   window.postEnv = () => {

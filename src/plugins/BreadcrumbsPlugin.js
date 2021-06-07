@@ -1,9 +1,11 @@
-import { getTagName, edithAddEventListener, getRandomID, getXPath,
-  isIE8, getOuterHTML, getCurrentTime, getTimeStamp, isWhite, compressString } from '../utils'
-import { eventTrigger } from '../common'
+// import { utils.edithAddEventListener } from '../utils'
+import { getTagName, eventTrigger, getRandomID, getTimeStamp, getXPath,
+  isIE8, isWhite } from '../common'
 
+let utils = {}
+const ie8 = isIE8()
 // 用户行为记录的最多数量
-const RECORD_COUNT = 20
+const RECORD_COUNT = 15
 let ajaxWhiteList = []
 const navigationProxy = () => {
   if(!history.replaceState && history.pushState ) return
@@ -25,8 +27,13 @@ const navigationProxy = () => {
 
 const breadcrumbs = [] 
 // 自定义add方法来添加数据，并且超过数量限制后自动会移除最早的记录,同时支持根据唯一id，选择覆盖还是添加操作
-breadcrumbs.add = data => {
-  const index = breadcrumbs.findIndex(i => data.eid && i.eid === data.eid) // 如果有相同的eid，代表只需要修改
+function add(data, breadcrumbs) {
+  let index = -1 // 如果有相同的eid，代表只需要修改
+  breadcrumbs.forEach((item, i) => {
+    if(data.eid && item.eid === data.eid && index === -1) {
+      index = i
+    }
+  })
   if(index >= 0) return breadcrumbs.splice(index, 1, {...breadcrumbs[index], ...data})
   if(breadcrumbs.length >= RECORD_COUNT) breadcrumbs.shift()
   breadcrumbs.push({
@@ -43,10 +50,10 @@ const addActionRecord = type => event => {
   const tagName = getTagName(errorTarget).toLowerCase()
   const className = errorTarget.className;
   const id = errorTarget.id;
-  const outerHTML = getOuterHTML(errorTarget)
+  const outerHTML = utils.getSimpleString(errorTarget.outerHTML)
   const record = {
     type,
-    time: getCurrentTime(),
+    time: utils.getCurrentTime(),
     timeStamp: getTimeStamp(), 
     // page: {
     //   url: location.href,
@@ -60,26 +67,26 @@ const addActionRecord = type => event => {
       xPath: getXPath(errorTarget)
     }
   }
-  breadcrumbs.add(record)
+  add(record, breadcrumbs)
 };
 
 const addUrlRecord = method => event => {
   const record = {
     type: 'navigation',
-    time: getCurrentTime(),
+    time: utils.getCurrentTime(),
     method: method || event.detail.method,
     timeStamp: getTimeStamp(),
     detail: {
       from: {
-        url: event.oldURL || event.detail.oldURL,
+        url: utils.getSimpleString(event.oldURL || event.detail.oldURL),
         title: document.title
       },
       to: {
-        url: event.newURL || event.detail.newURL,
+        url: utils.getSimpleString(event.newURL || event.detail.newURL),
       }
     }
   }
-  breadcrumbs.add(record)
+  add(record, breadcrumbs)
 }
 
 
@@ -108,10 +115,10 @@ const addHttpRecord = (xhr, type = 'XMLHttpRequest') => {
       // requestHeader,
       // responseHeader: xhr.getAllResponseHeaders() || {}, // 这个方法不能解构出来赋值
       statusText, // 状态
-      url: responseURL || url, // 接口响应地址
+      url: utils.getSimpleString(responseURL || url, 150), // 接口响应地址
     }
   }
-  breadcrumbs.add(record)
+  add(record, breadcrumbs)
 }
 
 // 记录ajax请求
@@ -123,10 +130,10 @@ const recordAjax = () => {
     xhr.endTime = time // 不断更新状态
     addHttpRecord(xhr)
   }
-  edithAddEventListener('ajaxOpen', callBack)
-  edithAddEventListener('ajaxProgress', callBack);
+  utils.edithAddEventListener('ajaxOpen', callBack)
+  utils.edithAddEventListener('ajaxProgress', callBack);
   // 当XHR发生 abort / timeout / error 时事件触，loadend是最后触发的
-  edithAddEventListener('ajaxLoadEnd', callBack);
+  utils.edithAddEventListener('ajaxLoadEnd', callBack);
 }
 // getAllResponseHeaders没有
 const recordFetch = () => {
@@ -141,8 +148,8 @@ const recordFetch = () => {
     }
     addHttpRecord(xhr, 'fetchRequest')
   }
-  edithAddEventListener('fetchStart', callBack);
-  edithAddEventListener('fetchEnd', callBack);
+  utils.edithAddEventListener('fetchStart', callBack);
+  utils.edithAddEventListener('fetchEnd', callBack);
 }
 
 const addWebSocketRecord = method => ws => {
@@ -159,7 +166,7 @@ const addWebSocketRecord = method => ws => {
       readyState,
     }
   }
-  breadcrumbs.add(record)
+  add(record, breadcrumbs)
 }
 
 // 记录WebSocket，建立连接和断开，算两次不同的行为记录
@@ -179,17 +186,17 @@ const recordWebSocket = () => {
     ws.timeStamp = ws.timeStamp || getTimeStamp()
     addWebSocketRecord(type)(ws)
   }
-  edithAddEventListener('webSocketStart', callback('open', true))
-  edithAddEventListener('webSocketOpen', callback('open'))
-  edithAddEventListener('webSocketClose', callback('close'))
+  utils.edithAddEventListener('webSocketStart', callback('open', true))
+  utils.edithAddEventListener('webSocketOpen', callback('open'))
+  utils.edithAddEventListener('webSocketClose', callback('close'))
 }
 
 const behaviorRecord = () => {
-  edithAddEventListener('click', addActionRecord('click'), true)
+  utils.edithAddEventListener('click', addActionRecord('click'), true)
   recordAjax()
   recordFetch()
   recordWebSocket() // 监听webSocket
-  if(isIE8) {
+  if(ie8) {
     let url = location.href
     setInterval(function() {
         if(url!=location.href){
@@ -202,8 +209,8 @@ const behaviorRecord = () => {
         }
     }, 250);
   } else {
-    edithAddEventListener('hashchange', addUrlRecord('hashchange'))
-    edithAddEventListener('navigationChange', addUrlRecord())
+    utils.edithAddEventListener('hashchange', addUrlRecord('hashchange'))
+    utils.edithAddEventListener('navigationChange', addUrlRecord())
   }
 }
 
@@ -216,17 +223,18 @@ class BreadcrumbsPlugin {
   }
   apply(compiler) {
     const that = this;
-    compiler(this.name, function({ state, ajaxWhiteList: _ajaxWhiteList }, callback) {
+    compiler(this.name, function({ state, ajaxWhiteList: _ajaxWhiteList, utils: _utils }, callback) {
+      utils = _utils
       if(!state[that.name]) {
         ajaxWhiteList = _ajaxWhiteList
         navigationProxy() // 自定义路由跳转事件
         behaviorRecord()
       }
-      callback(compressString(breadcrumbs))
+      callback(utils.compressData(breadcrumbs))
       // callback(breadcrumbs)
     })
   }
 }
-if(!window.Edith) window.Edith = {}
-window.Edith.BreadcrumbsPlugin = BreadcrumbsPlugin
+// if(!window.Edith) window.Edith = {}
+// window.Edith.BreadcrumbsPlugin = BreadcrumbsPlugin
 export default BreadcrumbsPlugin

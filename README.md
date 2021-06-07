@@ -47,17 +47,15 @@ Edith.init({
 - CDN方式
 
 ```javascript
-document.addEventListener('EdithJsReady', () => {
-  window.Edith.init({
-    apiKey: 'apikey', // 用于区分不同项目
-    silentDev: true, // 开发环境下不上报，根据域名是否为ip或者localhost来判断
-    plugins: [ // 内置插件
-      'breadcrumbs', // 记录用户行为堆栈
-      'redo', // 记录录屏
-      'network', // 记录网络信息
-    ]
-  })
-}, false);
+window.Edith.init({
+  apiKey: 'apikey', // 用于区分不同项目
+  silentDev: true, // 开发环境下不上报，根据域名是否为ip或者localhost来判断
+  plugins: [ // 内置插件
+    'breadcrumbs', // 记录用户行为堆栈
+    'redo', // 记录录屏
+    'network', // 记录网络信息
+  ]
+})
 ```
 
 ## 其他参数

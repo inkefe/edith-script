@@ -8,11 +8,10 @@ export const RECORD_KEY = '_edith_record'
 export const PROMISE_TIMEOUT = 500
  // 默认请求白名单，不记录不报错
 const ajaxWhiteList = [
-  `${serviceRoot}/v1/monitor/add`, 
-  `${serviceRoot}/v1/upload/test-img`,
-    /\/sockjs-node\/info/, // 忽略代理报错
+  /op-center\.cn\/v1\/monitor/,
+  /\/sockjs-node\/info/, // 忽略代理报错
 ]
-
+if(IS_DEV) ajaxWhiteList.push(/\/livereload/)
 // 状态
 export const EDITH_STATUS = {
   INIT: 'INIT', // init阶段
@@ -35,11 +34,11 @@ const scriptPath = () => {
   const url = document.currentScript.src
   const link = document.createElement('a')
   link.href = url
-  const path = (`${link.hostname}${link.port ?  ':' + link.port : ''}${link.pathname}`).replace(/\/[^/]+$/, '')
+  const path = (`${link.hostname}${link.port ?  ':' + link.port : ''}${link.pathname}`)
   return path
 }
-const cdnPath = `//${scriptPath() || 'webcdn.inke.cn/edith.cn'}`
-
+export const cdnUrl = `//${FORMAT === 'iife' && scriptPath() || 'webcdn.inke.cn/edith.cn'}`
+const cdnPath = cdnUrl.replace(/\/[^/]+$/, '')
 // 内置插件的cdn地址
 export const innerPluginsCdn = {
   breadcrumbs: {

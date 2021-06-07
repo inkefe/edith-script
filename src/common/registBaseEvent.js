@@ -1,5 +1,5 @@
-import { getCurrentTime, getRandomID, isSuccess, isFunction } from '../utils' // , getLocalData, saveLocalData
-import { eventTrigger } from './index'
+ // , getLocalData, saveLocalData
+import { isFunction, isSuccess, eventTrigger, getCurrentTime, getRandomID } from './index'
 // import { getCLS, getFID, getLCP, getFCP } from 'web-vitals';
 import { loadScript } from '../utils' // getPerform
 // import { reportDebug } from '../api'
@@ -210,8 +210,8 @@ function promisePolyfill () {
 promisePolyfill()
 export default function () {
   customEventPolyfill()
-  xhrProxy() // 给XHR注册事件
-  fetchProxy() // 给fetch注册事件
+  // xhrProxy() // 给XHR注册事件
+  // fetchProxy() // 给fetch注册事件
   // performanceRecode()
 }
 

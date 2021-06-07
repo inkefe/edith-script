@@ -1,13 +1,13 @@
 import _Edith from './prototype'
 import reportRequest from './api/request'
 import registBaseEvent from './common/registBaseEvent'
-import { getErrorInfo } from  './common'
+import { getErrorInfo, getCurrentTime, getTimeStamp, getTagName, getSimpleString,
+  getXPath, isFunction, setScriptCross, isWhite } from  './common'
 import { PROMISE_TIMEOUT, EDITH_STATUS } from './config'
-import { tryCatchFunc, edithAddEventListener, getTagName, getOuterHTML, getXPath,
-  transToString, isWhite, getTimeStamp, isFunction, setScriptCross, getCurrentTime} from './utils'
+import { tryCatchFn, edithAddEventListener, transToString} from './utils'
 
 class EdithClass extends _Edith {
-  
+
   silentDev = false // 是否开发环境不上报
   silentPromise = false // 是否需要不监控Promise
   silentWebsocket = false // 是否需要不监控 WebSocket
@@ -20,6 +20,13 @@ class EdithClass extends _Edith {
     for(var prop in options){
       if(options[prop] !== void 0 && !isFunction(this[prop]) && prop !== 'version')
         this[prop] = options[prop]
+    }
+    const tryCatchFunc = fn => tryCatchFn(fn, this)
+    this.utils = {
+      ...this.utils,
+      getCurrentTime,
+      getSimpleString,
+      tryCatchFunc
     }
     this.filters = options.filters && tryCatchFunc(options.filters)
   }
@@ -68,6 +75,7 @@ class EdithClass extends _Edith {
 
   // 处理primise报错，设置了一个修复机制
   handlePromise = (e, pro) => {
+    const { tryCatchFunc } = this.utils
     let promiseTimer = setTimeout(tryCatchFunc(() => {
       const { reason } = e
       e.message = Object.prototype.toString.call(reason) === '[object Error]'? reason.toString() : transToString(reason)
@@ -78,13 +86,12 @@ class EdithClass extends _Edith {
         ...this.state,
         ...event
       })
+      clearTimeout(promiseTimer)
       this.$handleCollect()
     }), PROMISE_TIMEOUT)
     window.onrejectionhandled = tryCatchFunc((event, promise)=> {
-      if(pro === promise) {
-        if(promiseTimer) clearTimeout(promiseTimer)
-        promiseTimer = null
-      }
+      if(pro !== promise) return
+      if(promiseTimer) clearTimeout(promiseTimer)
     })
   }
   debug(name, message) {
@@ -122,14 +129,14 @@ class EdithClass extends _Edith {
         sourceUrl = errorTarget.href
       } else sourceUrl = errorTarget.src
       if(isWhite(this.resourceWhiteList, sourceUrl)) return // 白名单不做上报
-      sourceUrl === location.href && (sourceUrl = '')
+      sourceUrl.split('?')[0] === location.href.split('?')[0] && (sourceUrl = '')
       errorEvent.message = sourceUrl
       errorEvent.name = errorEvent._type = 'resourceError'
       errorEvent._target = {
         tagName,
         className: errorTarget.className,
         id: errorTarget.id,
-        outerHTML: getOuterHTML(errorTarget),
+        outerHTML: this.utils.getSimpleString(errorTarget.outerHTML),
         xPath: getXPath(errorTarget)
       }
       return errorEvent
@@ -187,5 +194,4 @@ class EdithClass extends _Edith {
 }
 
 const Edith = new EdithClass()
-window.Edith = Edith
 export default Edith

@@ -19,8 +19,8 @@
     }
     // npm publish --access public
     Edith.init({
-      // apiKey: 'YXBpS2V5MTU5NzI4OTY0MA', // 测试环境的测试api
-      apiKey: 'YXBpS2V5MTU5NzM5MzkxMw', // 正式环境的测试api
+      apiKey: 'YXBpS2V5MTU5NzI4OTY0MA', // 测试环境的测试api
+      // apiKey: 'YXBpS2V5MTU5NzM5MzkxMw', // 正式环境的测试api
       plugins: [
         'breadcrumbs', // 记录用户行为堆栈
         'redo', // 记录录屏
@@ -29,7 +29,9 @@
         {
           apply(compiler) {
             compiler('compilation', function({ state }, callback) {
-              callback('compilation')
+              callback({
+                my: 'compilation'
+              })
             })
           }
         }
@@ -74,12 +76,13 @@
   <button id='promise-btn' onclick="emitPromiseError()">
     点我触发Promise未捕获的错误
   </button>
-  <button id='fetch-btn' onclick="toFetch()" class="edith-private">
+  <button id='fetch-btn' onclick="toFetch()" class="edith-block">
     点我发起fetch请求
   </button>
-  <button id='fetch-btn' onclick="websocketError()" class="_edith-private">
+  <button id='fetch-btn' onclick="websocketError()" class="edith-private">
     点我触发websocketError
   </button>
+  <span id='timedom'></span>
   <input class="edith-ignore" type="text"/> 
   <input class="edith-ignore" type="radio"/> 
   <script>
@@ -87,9 +90,8 @@
     // var e = a.w.d
     function myclick() {
       // location.href = 'http://www.baidu.com'
-      document.getElementById('ik_share_title').innerText(213)
       try{
-        var v = cd.ss
+        var v = ccc.ss
       }catch(e){
         throw e
       }
@@ -119,6 +121,14 @@
     function websocketError() {
       window.ws = new WebSocket('wss://echo.websocket.org/xxx')
     }
+    var dom = document.getElementById('timedom')
+    function loop() {
+      var timer = setTimeout(function() {
+        dom.innerText = new Date()
+        return loop()
+      }, 1000)
+    }
+    loop()
     function getApiKey () {
       xmlhttp = new XMLHttpRequest()
       xmlhttp.open('GET', `//csedith.busi.hnccyc.cn/v1/apikey/drop-list`, true)
