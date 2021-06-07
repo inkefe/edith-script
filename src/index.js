@@ -129,7 +129,7 @@ class EdithClass extends _Edith {
         sourceUrl = errorTarget.href
       } else sourceUrl = errorTarget.src
       if(isWhite(this.resourceWhiteList, sourceUrl)) return // 白名单不做上报
-      sourceUrl.split('?')[0] === location.href.split('?')[0] && (sourceUrl = '')
+      sourceUrl.split(/\?|#/)[0] === location.href.split(/\?|#/)[0] && (sourceUrl = '')
       errorEvent.message = sourceUrl
       errorEvent.name = errorEvent._type = 'resourceError'
       errorEvent._target = {
