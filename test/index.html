@@ -21,10 +21,12 @@
     Edith.init({
       apiKey: 'YXBpS2V5MTU5NzI4OTY0MA', // 测试环境的测试api
       // apiKey: 'YXBpS2V5MTU5NzM5MzkxMw', // 正式环境的测试api
+      ajaxWhiteList: [111],
       plugins: [
         'breadcrumbs', // 记录用户行为堆栈
         'redo', // 记录录屏
         'network', // 记录网络信息
+        'performance',
         // new Plugin()
         {
           apply(compiler) {
@@ -91,7 +93,7 @@
     function myclick() {
       // location.href = 'http://www.baidu.com'
       try{
-        var v = ccc.ss
+        var v = hsuiayrde.s
       }catch(e){
         throw e
       }

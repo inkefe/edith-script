@@ -8,6 +8,7 @@ export const RECORD_KEY = '_edith_record'
 export const PROMISE_TIMEOUT = 500
  // 默认请求白名单，不记录不报错
 const ajaxWhiteList = [
+  /p-center\.cn\/v1\/white-list\/get/,
   /op-center\.cn\/v1\/monitor/,
   /\/sockjs-node\/info/, // 忽略代理报错
 ]
@@ -28,7 +29,8 @@ export const EDITH_STATUS = {
 export const innerPlugins = {
   breadcrumbs: () => import('../plugins/BreadcrumbsPlugin'),
   network: () => import('../plugins/NetworkCheckPlugin'),
-  redo: () => import('../plugins/RecordPlugin')
+  redo: () => import('../plugins/RecordPlugin'),
+  performance: () => import('../plugins/PerformancePlugin')
 }
 const scriptPath = () => {
   const url = document.currentScript.src
@@ -52,8 +54,13 @@ export const innerPluginsCdn = {
   redo: {
     link: `${cdnPath}/plugins/RecordPlugin.js`,
     name: 'RecordPlugin'
-  }
+  },
+  performance: {
+    link: `${cdnPath}/plugins/PerformancePlugin.js`,
+    name: 'PerformancePlugin'
+  },
 }
+
 export const remixProps = {
   ajaxWhiteList, 
   resourceWhiteList: [

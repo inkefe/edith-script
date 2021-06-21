@@ -2,7 +2,7 @@ import _Edith from './prototype'
 import reportRequest from './api/request'
 import registBaseEvent from './common/registBaseEvent'
 import { getErrorInfo, getCurrentTime, getTimeStamp, getTagName, getSimpleString,
-  getXPath, isFunction, setScriptCross, isWhite } from  './common'
+  getXPath, isFunction, setScriptCross, isWhite, removeHttpAndQuery } from  './common'
 import { PROMISE_TIMEOUT, EDITH_STATUS } from './config'
 import { tryCatchFn, edithAddEventListener, transToString} from './utils'
 
@@ -39,30 +39,32 @@ class EdithClass extends _Edith {
   // }
 
   checkSelf() { // 自定义自检方法
-    this.handleError({ type: 'error', target: window })
-    this.silentResource || this.handleError({ type: 'error', target: {src: '', tagName: 'a', outerHTML: '', parentNode: document} })
-    this.silentHttp || this.handleError({ type: 'ajaxError', detail: { target: { url: ''} } })
-    this.silentHttp || this.handleError({ type: 'fetchError', detail: { target: {options: {url: ''}} } })
+    this.hE({ type: 'error', target: window })
+    this.silentResource || this.hE({ type: 'error', target: {src: '', tagName: 'a', outerHTML: '', parentNode: document} })
+    this.silentHttp || this.hE({ type: 'ajaxError', detail: { target: { url: ''} } })
+    this.silentHttp || this.hE({ type: 'fetchError', detail: { target: {options: {url: ''}} } })
   }
 
   pluginInstalled() {
     if(this.notListening) return
     setScriptCross()
     // 全局error监听，js报错，包括资源加载报错
-    edithAddEventListener('error', this.handleError, true)
+    edithAddEventListener('error', this.hE, true)
     // 全局promise no catch error监听，捕获未处理的promise异常
     // 支持性不太好,IE不支持,低版本浏览器也不支持
     this.silentPromise || edithAddEventListener('unhandledrejection', this.handlePromise)
     // 网络请求的err
-    this.silentHttp || edithAddEventListener('ajaxError', this.handleError)
-    this.silentHttp || edithAddEventListener('ajaxTimeout', this.handleError)
-    this.silentHttp || edithAddEventListener('fetchError', this.handleError)
-    this.silentWebsocket || edithAddEventListener('webSocketError', this.handleError)
+    if(!this.silentHttp) {
+      edithAddEventListener('ajaxError', this.hE)
+      edithAddEventListener('ajaxTimeout', this.hE)
+      edithAddEventListener('fetchError', this.hE)
+    }
+    this.silentWebsocket || edithAddEventListener('webSocketError', this.hE)
   }
   
   //  捕获到错误时的回调函数
-  handleError = errorEvent => {
-    errorEvent = this.errorHandleFunc[errorEvent.type](errorEvent)
+  hE = errorEvent => {
+    errorEvent = this.errCb[errorEvent.type](errorEvent)
     if(!errorEvent) return
     const event = getErrorInfo(errorEvent)
     if(this.life !== EDITH_STATUS.LISTENING) return
@@ -87,11 +89,13 @@ class EdithClass extends _Edith {
         ...event
       })
       clearTimeout(promiseTimer)
+      promiseTimer = null
       this.$handleCollect()
     }), PROMISE_TIMEOUT)
     window.onrejectionhandled = tryCatchFunc((event, promise)=> {
       if(pro !== promise) return
-      if(promiseTimer) clearTimeout(promiseTimer)
+      clearTimeout(promiseTimer)
+      promiseTimer = null
     })
   }
   debug(name, message) {
@@ -106,10 +110,10 @@ class EdithClass extends _Edith {
     })
     this.$handleCollect()
   }
-  errorHandleFunc = {
+  // 错误回调汇总
+  errCb = {
     webSocketError : errorEvent => {
-      errorEvent.name = 'webSocketError';
-      errorEvent._type = 'webSocketError'
+      errorEvent.name = errorEvent._type = 'webSocketError';
       const errorTarget = errorEvent.detail.target || errorEvent.detail.currentTarget;
       const { url, startTime , openTime} = errorTarget
       if(isWhite(this.ajaxWhiteList, url)) return // 白名单不做上报
@@ -129,7 +133,7 @@ class EdithClass extends _Edith {
         sourceUrl = errorTarget.href
       } else sourceUrl = errorTarget.src
       if(isWhite(this.resourceWhiteList, sourceUrl)) return // 白名单不做上报
-      sourceUrl.split(/\?|#/)[0] === location.href.split(/\?|#/)[0] && (sourceUrl = '')
+      removeHttpAndQuery(sourceUrl) === removeHttpAndQuery(location.href) && (sourceUrl = '')
       errorEvent.message = sourceUrl
       errorEvent.name = errorEvent._type = 'resourceError'
       errorEvent._target = {
@@ -180,7 +184,7 @@ class EdithClass extends _Edith {
     error: errorEvent => {
       const errorTarget = errorEvent.target
       if (errorTarget !== window) { // 资源加载错误
-        return this.errorHandleFunc['resourceError'](errorEvent)
+        return this.errCb['resourceError'](errorEvent)
       }
       return errorEvent
     }

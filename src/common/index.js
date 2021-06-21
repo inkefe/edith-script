@@ -44,18 +44,21 @@ export const getXPath = (element) => {
     }
   }
 };
+
 // 获取省略字符，中间用省略号代替
 export const getSimpleString = (str, length = 200) => {
   // 如果点击的内容过长，就截取上传
-  str = typeof str === 'string' ? str : JSON.stringify(str)
-  if (str && str.length > length) {
+  var newstr = typeof str === 'string' ? str : JSON.stringify(str)
+  if (newstr && newstr.length > length) {
     const len = Math.max(length - 100, 50)
-    str = str.substr(0, len) + '... ...' + str.substr(len - length + 50)
+    newstr = newstr.substr(0, len) + '... ...' + newstr.substr(len - length + 50)
   }
-  return str || ''
+  return newstr || ''
 }
-const removeHttpAndQuery = (url) =>
-  url.replace(/^[^/]*:?\/\//, '').split('?')[0]
+
+export const removeHttpAndQuery = (url) =>
+  url.replace(/^[^/]*:?\/\//, '').split(/\?|#/)[0]
+
 // 判断是不是在白名单
 export const isWhite = (list, url) => {
   return list.some((i) => {
@@ -64,6 +67,7 @@ export const isWhite = (list, url) => {
     return removeHttpAndQuery(i) === removeHttpAndQuery(url)
   })
 }
+
 // 给外链script添加crossorigin属性，防止报anonymous错误
 export function setScriptCross() {
   var scripts = document.getElementsByTagName('script')
@@ -72,6 +76,7 @@ export function setScriptCross() {
     url && url[0] !== '/' && s.setAttribute('crossorigin', 'anonymous');
   }
 }
+
 export const isIE8 = () => {
   var ua = navigator.userAgent.toLowerCase()
 
@@ -97,7 +102,7 @@ export const getErrorInfo = err => {
     type: err._type || err.type, // 错误的类型，如httpError
     name: (err.name || err.message && err.message.split(':')[0] || err.type)?.replace(/^Uncaught\s/, ''), // 错误信息的名称
     message: getSimpleString(err.message || err.description || '', 300), // 错误信息的内容
-    extraInfo: err.extraInfo || null,
+    extraInfo: err.extraInfo || {},
     stacktrace: err.error && error.stack, // 错误的执行栈
     target: err._target,
     timeStamp: getTimeStamp(),

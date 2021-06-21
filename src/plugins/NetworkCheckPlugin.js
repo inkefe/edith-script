@@ -1,6 +1,6 @@
 const getAverage = (arr) => {
   const total = arr.reduce((total, item) => total + item, 0)
-  return arr.length === 0 ? -1 : total / arr.length
+  return arr.length === 0 ? -1 : (total / arr.length).toFixed(2)
 }
 // 测网速,返回单位为KB/sec的数值
 // https://juejin.im/post/5b4de6b7e51d45190d55340b

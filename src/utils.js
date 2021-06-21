@@ -1,10 +1,9 @@
 // /* eslint-disable no-undef */
-// import { compressToBase64 } from 'lz-string'
-// import { pack } from 'rrweb/lib/record/rrweb-record-pack'
 import { pack } from './pack'
-import { reportScriptError } from './api'
+import md5 from './md5'
+import { reportScriptError, batchAdd } from './api'
 import { cdnUrl } from './config'
-// console.log(LZString.compress('object'))
+import { removeHttpAndQuery, getCurrentTime } from './common'
 const performance = window.performance
 /**
  * 参数格式化, 符合url方式
@@ -33,42 +32,6 @@ export const uaInfo = (() => {
 })()
 
 
-/**
- * 把数据保存到本地
- */
-export const saveLocalData = (key, item, isSession) => {
-  const storage = isSession ? sessionStorage : localStorage
-  try {
-    if (item === void 0) storage.removeItem(key)
-    else storage.setItem(key, JSON.stringify(item))
-  } catch (error) {
-    console.warn(error)
-  }
-}
-/**
- * 读取本地数据
- */
-export const getLocalData = (key, isSession) => {
-  let res = null
-  try {
-    if (key === void 0) {
-      let allName = Object.keys(isSession ? sessionStorage : localStorage)
-      if (allName.length > 0) {
-        res = {}
-        allName.forEach((keyName) => {
-          res[keyName] = getLocalData(keyName)
-        })
-      }
-    } else
-      res = JSON.parse(
-        (isSession ? sessionStorage : localStorage).getItem(key)
-      )
-  } catch (error) {
-    console.warn(error)
-  }
-  return res
-}
-
 // 对方法进行封装，防止内部报错
 export const tryCatchFn = (fn, edith) => function(...args) {
     try {
@@ -82,13 +45,13 @@ export const tryCatchFn = (fn, edith) => function(...args) {
 
 // 通用事件监听方法
 export const edithAddEventListener = (name, fn, useCapture) => {
-  
+  var ae = window.attachEvent
   if (addEventListener) {
     // 所有主流浏览器，除了 IE 8 及更早版本
     addEventListener(name, tryCatchFn(fn), useCapture)
-  } else if (window.attachEvent) {
+  } else if (ae) {
     // IE 8 及更早版本
-    window.attachEvent(`on${name}`, tryCatchFn(fn))
+    ae(`on${name}`, tryCatchFn(fn))
   }
 }
 
@@ -110,7 +73,6 @@ export const getPerform = () => {
     // },
   }
 }
-  
 
 // 异步加载scripts标签
 export const loadScript = (url, cb, reject = () => {}) => {
@@ -135,8 +97,6 @@ export const getPromiseResult = (promises) => {
   )
   return handlePromise
 }
-
-
 
 // 得到Headers对象里的数据
 export const getHeaders = h => {
@@ -184,11 +144,76 @@ export function reportEdithError (name, err, edith) {
   })
 }
 
+
+/**
+ * 把数据保存到本地
+ */
+ export const saveLocalData = tryCatchFn((key, item) => {
+  localStorage.setItem(key, JSON.stringify(item))
+})
+/**
+ * 读取本地数据
+ */
+export const getLocalData = tryCatchFn((key) => JSON.parse(localStorage.getItem(key)))
 // 将每个错误生成唯一key，用错判断是否为重复错误
 export function getOnlyTag(err) {
-  
+  const { message, name, extraInfo } = err
+  const _massage = name === 'resourceError' ? removeHttpAndQuery(message || '') : message
+  const tag = location.host + location.pathname.replace(/index\.html$/, '') + name
+    + _massage + removeHttpAndQuery(extraInfo.url || '') + (extraInfo.method || '')
+  return md5(tag)
 }
 
+const Edith_KEY = '_edith_key'
+const TIMEOUT = 10 * 60 * 1000 // 十分钟
+// 检测本地是否有已经上报的数据
+export function checkLocalData(tag) {
+  const localData = getLocalData(Edith_KEY) || {}
+  const res = !!localData[tag] // 本地有记录，就不上报
+  if(res) {
+    localData[tag].push(getCurrentTime()) // 本地记录，不上报
+  } else {
+    localData[tag] = [ getCurrentTime() ]  // 上报且本地计数加1
+  }
+  saveLocalData(Edith_KEY, localData)
+  return res
+}
+const EXPIRATION_TIME = 2 * 60 * 60 * 1000 // 错误报存过期时间
+function task(edith) {
+  const localData = getLocalData(Edith_KEY) || {}
+  const now = getCurrentTime()
+  const params = {
+    apiKey: edith.apiKey,
+    errs: [],
+    now,
+    cookie: document.cookie,
+    userAgent: navigator.userAgent,
+  }
+  Object.keys(localData).forEach(tag => {
+    const originLenth = localData[tag].length
+    const rest = localData[tag].filter(time => now - time < EXPIRATION_TIME) // 拿到有效时间内的错误
+    if (rest.length === 1 && originLenth === 1) return
+    const times = rest.slice(originLenth === rest.length ? 1 : 0)
+    params.errs.push({
+      onlyTag: tag,
+      times
+    }) // 上报
+    delete localData[tag]
+  })
+  if(params.errs.length === 0) return
+  batchAdd(params)
+  saveLocalData(Edith_KEY, localData)
+}
+// 
+export function loopTask(edith, init) {
+  !init && task(edith)
+  let st = setTimeout(function() {
+    task(edith)
+    clearTimeout(st)
+    st = null
+    loopTask(edith, 1)
+  }, TIMEOUT)
+}
 
 /*
 // 汉字转unicode

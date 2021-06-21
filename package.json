@@ -1,6 +1,6 @@
 {
   "name": "@inke-design/edith-script",
-  "version": "0.4.6",
+  "version": "1.0.0",
   "description": "监控平台上报",
   "main": "./index.js",
   "scripts": {
@@ -45,7 +45,6 @@
     "concurrently": "^5.2.0",
     "cross-env": "^7.0.2",
     "eslint": "^7.3.1",
-    "http-server": "^0.12.3",
     "rollup": "^2.18.0",
     "rollup-plugin-babel": "^4.3.3",
     "rollup-plugin-cleaner": "^1.0.0",
@@ -58,6 +57,7 @@
     "web-vitals": "^0.2.4"
   },
   "dependencies": {
-    "lz-string": "^1.4.4"
+    "address": "^1.1.2",
+    "fflate": "^0.7.1"
   }
 }

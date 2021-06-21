@@ -4,7 +4,7 @@ let xmlhttp = null
 const getPromise = (xmlhttp, callback) => new Promise((resolve, reject) => {
   xmlhttp.onreadystatechange = tryCatchFn(() => {
     if(xmlhttp.readyState !== 4) return
-    var responseText = ['', 'text'].indexOf(xmlhttp.responseType) >= 0 ? xmlhttp.responseType : 'no responseText'
+    var responseText = ['', 'text'].indexOf(xmlhttp.responseType) >= 0 ? xmlhttp.responseText : 'no responseText'
     if (xmlhttp.status === 200) {
       // console.log(xmlhttp.responseText)
       let res = {}
@@ -48,7 +48,7 @@ const request = {
       const fn = () => {
         xmlhttp.open('POST', `${root}${url}`, true)
         xmlhttp.setRequestHeader('Content-type','application/json;charset=utf-8');
-        // xmlhttp.withCredentials = true;
+        xmlhttp.withCredentials = true;
         xmlhttp.send(JSON.stringify(parmas));
       }
       if(IS_DEV){

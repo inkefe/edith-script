@@ -6,7 +6,11 @@ reportRequest.setRoot(serviceRoot)
 
 export const reportDebug = reportRequest.post('/v1/monitor/add'); //上报
 
+export const batchAdd = reportRequest.post('/v1/monitor/batch-add') // 批量上报
+
 export const measureBWSimple = reportRequest.get('/v1/upload/test-img'); //测试网速
+
+export const getWhiteList = reportRequest.get('/v1/white-list/get') // 获取本应用的白名单配置
 
 export const reportScriptError = reportRequest.post('/v1/monitor/script-add') // 上报脚本自身错误
 

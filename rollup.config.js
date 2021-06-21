@@ -6,6 +6,7 @@ import replace from '@rollup/plugin-replace'
 import livereload from 'rollup-plugin-livereload';
 import serve from 'rollup-plugin-serve';
 import cleaner from 'rollup-plugin-cleaner'
+const address = require('address');
 import commonjs from '@rollup/plugin-commonjs' // 解析ES6的导入导出
 // import json from '@rollup/plugin-json' // 解析json
 import pkg from './package.json'
@@ -37,10 +38,11 @@ const plugins = [
   eslint(),
   // 本地服务器
   IS_DEV && serve({
-    open: true, // 自动打开页面
-    port: 7000,
+    open: false, // 自动打开页面
+    port: 7050,
+    host: address.ip(),
     openPage: '/index.html', // 打开的页面
-    contentBase: 'test'
+    contentBase: './test'
   })
 ]
 
@@ -71,7 +73,16 @@ const pluginModule = [
       format, // 打包的类型格式，amd（异步模块定义），cjs（commonjs），es（将软件包保存为es模块文件），iife（适合作为<script>标签），umd（以amd、cjs、iife为一体）
     },
     plugins
-  }
+  },
+  {
+    input: 'src/plugins/PerformancePlugin.js',
+    output: {
+      name: 'Edith.PerformancePlugin',
+      dir: IS_DEV ? `test/static/plugins` : `dist/plugins`,
+      format, // 打包的类型格式，amd（异步模块定义），cjs（commonjs），es（将软件包保存为es模块文件），iife（适合作为<script>标签），umd（以amd、cjs、iife为一体）
+    },
+    plugins
+  },
 ]
 
 let rollupConfig = [
