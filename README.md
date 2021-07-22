@@ -138,3 +138,37 @@ Edith内部有一个`debug`方法，可以传两个参数，第一个参数为�
     return tagName.match(/img/g) && message === ''
   }
   ```
+
+## 自定义插件
+
+有些业务需要上报业务需要的相关数据，就可以采用自定义插件的方式，本方式参考了`webpack`的插件接入方式
+
+插件是一个带有`apply`方法的对象，这个方法的唯一参数`compiler`为一个函数，需要在`apply`方法内部调用它，来添加上报的插件数据。
+
+  ```javascript
+  Edith.init({
+    ...,
+    plugins: [
+      { // 自定义插件
+        apply(compiler) {
+          compiler('key', function(edith, callback) {
+            callback({
+              uid: 'my-data'
+            })
+          })
+        }
+      }
+    ],
+  })
+  ```
+> 收到上报后，会在后台错误详请里查看插件数据
+
+而这个`compiler`函数，接收两个参数：
+1. 第一个为上报插件数据的Key[字符串]
+2. 第二个参数为一个获取内容的方法（为了保证每次上报都会执行获取一次），该方法有两个参数
+> 第一个为Edith实例对象，可以通过其拿到Edith自身的配置数据；第二个为一个回调函数，通过执行这个函数来传递需要上报的内容，内容可以是对象，也可以是字符串或其他数据类型
+
+除了在初始化时添加插件，也可以动态添加，且可以通过new 一个对象来增加自己需要的属性。
+```javascript
+ Edith.plugins.push(new MyEdithPlugins(options))
+```
