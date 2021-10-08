@@ -68,6 +68,7 @@ Edith.init({
     'breadcrumbs', // 记录用户行为堆栈
     'redo', // 记录录屏
     'network', // 记录网络信息
+    'performance', // 性能数据
   ],
   resourceWhiteList: ['www.baidu.com', /^((?!(a\.com|b\.com)).)*$/], // 资源加载监听的白名单（支持正则，字符串会忽略判断协议和query参数）
   ajaxWhiteList: ['//example.com/search'], // 网络请求监听的白名单（支持正则，字符串会忽略判断协议和query参数）
